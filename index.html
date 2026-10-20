@@ -1,0 +1,733 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Fuel Log</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Fuel Log">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#F1F4F0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F1411" media="(prefers-color-scheme: dark)">
+<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAAEP0lEQVR42u3dvXHbQBAGUEqjHhw4ccJRU+pAmQpxpg7clIbNOFBiayQKBA57u4v3hYxwh4e9H4DA3Y9fP08in+VeFwgcAofAIXAIHAKHwCFwCBwChwgcAofAIXAIHAKHwCFwCBwChwgcAofAIXAIHAKHwCFwCBwChwgcAofcngdd8G/ens+f/v74eoFDFqE5iBU4tlppDAWOYVD6KTEhHankqymLyiHdConKoZDAkWxtDIfULiFwIAKHUQYOPuAwxMChhMDBBxxSzMedLzVlOH8599rhyAIloQ84EkHJ5gOOXERS+YAjHZE8PuDISCSJD0vZwZOGTg8LwpFx3ZFk88Ow8l/Of35/+OXy9DLrBE8vQnB8g2MjlI1E5vrwgPEaOsuVPL5e6j4paM6xUsn1GjPq6p8LC44IIkWXMHDsO03Z7mNi8YAjroSU8wFHdAkxrPDRoXjAUcYHHHzAYf5RYWSBY46PEsUjGke/N5xE1o/grptzb+W9kQmvng83TXZdnea/7RJ9V/bT7shfY7couXKXbgWOyL4KxfFtXyRXsppIUR+5JqTvM5K0xXb1gz9Fk3S1kpbI5ellBZErJSdzsbSUVUIS4Gi2gr3Vx8CFT1hPqhxSEEf+9e2owSVtS1WOOB/lHviAQ2bjaHw/ZcrKJaY/k1aOo30ZKWd7DSuhqTXtgKPqyAKHwCFwCBwCh8AhcIjAIXBEpt//6+GYkFp7qXkfMD4UmpztDcLR+C7rlDElpj8NKwJHgrJR7uZtXhz5px2jBpS0LVU5JAGOZnPSW8vGwDHloH+ktkJJldQvxn97PmerN+tYjH0FgzmHgjE/Kd7sEznErvgsxumob/Z5OOylv0TJ9lJR+sH0Ajj2nnnMGizyb+REzzkmTjDjEQwvG8G9V2NCWvEm7XUZJVo0AceU4hFcNvaYasT3W5ml7JZLLZuMKoWw0j5HiT5tI2Majshv0kSWjf1kTBmL7ZCmnmfMzcwvUgdcRjFlYyGLWmVjcuWo+DXN48g41d0+X7ht+n7mdqofy8eRog/TzxxWtnfcTVfVQCI3TS/CGqhyrKkfH87oHl/GaFYzslSOIT24+gr7FsrqNcjERrXC0aMr+zUnyz7H9r7IU8DbQG/1sM/07wo2+4tvlmFleOcGE6l75GVwDL/4Ajq63AEXxrFHcd6px6scZyscuw7eG09A2gM7EI6Yyd3C85HnSOBoO/mvJeOU/HmOI3x1xXdl+SjZuns9qF0l5xxdpyBVuN/rU63ogKOBj1rHX2lYKT3EVGRdFUchInWrXe3/reTv99LjYO3KkbmENJg+N8GRR0mnXZluOCYS6bdZ1xNHpJLGG/zNcewE5Qh3BI+FY4uVg2iAQ5bG+zkEDoFD4BA4BA6BQ+AQOAQOgUMEDoFD4BA4BA6BQ+AQOAQOgUMEDoFD4BA4BA6BQ+AQOAQOgUMEDvk6fwF4A78WCc+OvQAAAABJRU5ErkJggg==">
+<link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAAEP0lEQVR42u3dvXHbQBAGUEqjHhw4ccJRU+pAmQpxpg7clIbNOFBiayQKBA57u4v3hYxwh4e9H4DA3Y9fP08in+VeFwgcAofAIXAIHAKHwCFwCBwChwgcAofAIXAIHAKHwCFwCBwChwgcAofAIXAIHAKHwCFwCBwChwgcAofcngdd8G/ens+f/v74eoFDFqE5iBU4tlppDAWOYVD6KTEhHankqymLyiHdConKoZDAkWxtDIfULiFwIAKHUQYOPuAwxMChhMDBBxxSzMedLzVlOH8599rhyAIloQ84EkHJ5gOOXERS+YAjHZE8PuDISCSJD0vZwZOGTg8LwpFx3ZFk88Ow8l/Of35/+OXy9DLrBE8vQnB8g2MjlI1E5vrwgPEaOsuVPL5e6j4paM6xUsn1GjPq6p8LC44IIkWXMHDsO03Z7mNi8YAjroSU8wFHdAkxrPDRoXjAUcYHHHzAYf5RYWSBY46PEsUjGke/N5xE1o/grptzb+W9kQmvng83TXZdnea/7RJ9V/bT7shfY7couXKXbgWOyL4KxfFtXyRXsppIUR+5JqTvM5K0xXb1gz9Fk3S1kpbI5ellBZErJSdzsbSUVUIS4Gi2gr3Vx8CFT1hPqhxSEEf+9e2owSVtS1WOOB/lHviAQ2bjaHw/ZcrKJaY/k1aOo30ZKWd7DSuhqTXtgKPqyAKHwCFwCBwCh8AhcIjAIXBEpt//6+GYkFp7qXkfMD4UmpztDcLR+C7rlDElpj8NKwJHgrJR7uZtXhz5px2jBpS0LVU5JAGOZnPSW8vGwDHloH+ktkJJldQvxn97PmerN+tYjH0FgzmHgjE/Kd7sEznErvgsxumob/Z5OOylv0TJ9lJR+sH0Ajj2nnnMGizyb+REzzkmTjDjEQwvG8G9V2NCWvEm7XUZJVo0AceU4hFcNvaYasT3W5ml7JZLLZuMKoWw0j5HiT5tI2Majshv0kSWjf1kTBmL7ZCmnmfMzcwvUgdcRjFlYyGLWmVjcuWo+DXN48g41d0+X7ht+n7mdqofy8eRog/TzxxWtnfcTVfVQCI3TS/CGqhyrKkfH87oHl/GaFYzslSOIT24+gr7FsrqNcjERrXC0aMr+zUnyz7H9r7IU8DbQG/1sM/07wo2+4tvlmFleOcGE6l75GVwDL/4Ajq63AEXxrFHcd6px6scZyscuw7eG09A2gM7EI6Yyd3C85HnSOBoO/mvJeOU/HmOI3x1xXdl+SjZuns9qF0l5xxdpyBVuN/rU63ogKOBj1rHX2lYKT3EVGRdFUchInWrXe3/reTv99LjYO3KkbmENJg+N8GRR0mnXZluOCYS6bdZ1xNHpJLGG/zNcewE5Qh3BI+FY4uVg2iAQ5bG+zkEDoFD4BA4BA6BQ+AQOAQOgUMEDoFD4BA4BA6BQ+AQOAQOgUMEDoFD4BA4BA6BQ+AQOAQOgUMEDvk6fwF4A78WCc+OvQAAAABJRU5ErkJggg==">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#F1F4F0; --surface:#FFFFFF; --surface2:#E7ECE6; --ink:#17201B; --muted:#5C6A62; --line:#D6DDD5;
+  --kcal:#C2631B; --kcal-soft:#F6E3D3; --protein:#0F7565; --protein-soft:#D4ECE6; --over:#C03636; --onink:#F7FAF6;
+  --display:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;
+  --body:"Figtree",-apple-system,"Segoe UI",system-ui,sans-serif;
+  --r:16px; color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F1411; --surface:#171F1A; --surface2:#212A24; --ink:#E8EEE9; --muted:#93A299; --line:#2B3630;
+  --kcal:#F08B40; --kcal-soft:#3A2717; --protein:#3CC4A9; --protein-soft:#14332C; --over:#FF6E6E; --onink:#0F1411; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1411; --surface:#171F1A; --surface2:#212A24; --ink:#E8EEE9; --muted:#93A299; --line:#2B3630;
+  --kcal:#F08B40; --kcal-soft:#3A2717; --protein:#3CC4A9; --protein-soft:#14332C; --over:#FF6E6E; --onink:#0F1411; color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 var(--body);-webkit-tap-highlight-color:transparent;overflow:hidden;-webkit-text-size-adjust:100%}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--protein);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+
+#app{height:100%;display:flex;flex-direction:column}
+#view{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-top:calc(14px + env(safe-area-inset-top,0px));padding-bottom:calc(110px + env(safe-area-inset-bottom,0px))}
+.wrap{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+
+.top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.brand{font:700 22px/1 var(--display);letter-spacing:-.3px}
+.sync{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.sync i{width:7px;height:7px;border-radius:50%;background:var(--protein)}
+.sync.warn i{background:var(--kcal)}
+.daynav{display:flex;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px}
+.daynav button{border:0;background:transparent;width:40px;height:36px;border-radius:999px;font-size:18px;color:var(--muted)}
+.daynav button:disabled{opacity:.3}
+.daynav .lbl{font-weight:600;text-align:center}
+.daynav .lbl small{display:block;font-weight:500;color:var(--muted);font-size:12px}
+
+.summary{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.gauge{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 12px 12px;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+.gauge svg{width:116px;height:116px;max-width:100%}
+.gauge .mid{position:absolute;top:44px;left:0;right:0;text-align:center}
+.gauge .t{font:700 26px/1 var(--display);font-variant-numeric:tabular-nums}
+.gauge .u{font-size:12px;color:var(--muted);letter-spacing:.6px;text-transform:uppercase}
+.gauge .left{font-size:13px;color:var(--muted);text-align:center}
+.gauge .left b{color:var(--ink);font-weight:600}
+.gauge.over .left b{color:var(--over)}
+.notarget{font-size:13px;color:var(--muted);text-align:center}
+.notarget button{border:0;background:none;color:var(--protein);font-weight:600;padding:0;text-decoration:underline}
+
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:13px 14px;font-weight:600;min-height:48px;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;text-align:center}
+.btn.primary{background:var(--ink);border-color:var(--ink);color:var(--onink)}
+.btn.danger{color:var(--over);border-color:color-mix(in srgb,var(--over) 40%,var(--line))}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.wide{width:100%}
+.btn svg{width:20px;height:20px;flex:none}
+.btn.disabled{opacity:.45;pointer-events:none}
+
+.meal{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.meal-h{display:flex;align-items:baseline;justify-content:space-between;padding:12px 14px 8px;gap:8px}
+.meal-h h3{margin:0;font:600 16px/1.2 var(--display)}
+.meal-h h3 span{font:500 12px var(--body);color:var(--muted)}
+.meal-h .tot{font-size:13px;color:var(--muted)}
+.meal-h .add{border:0;background:var(--surface2);border-radius:999px;width:30px;height:30px;font-size:18px;line-height:1;flex:none}
+.meal-h .r{display:flex;align-items:center;gap:10px}
+.entry{display:flex;gap:10px;align-items:center;width:100%;text-align:left;border:0;border-top:1px solid var(--line);background:none;padding:11px 14px}
+.entry:active{background:var(--surface2)}
+.entry .main{flex:1;min-width:0}
+.entry .nm{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.entry .sub{font-size:12.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.entry .vals{text-align:right;flex:none;font-size:13.5px;line-height:1.35}
+.entry .k{color:var(--kcal);font-weight:600}
+.entry .p{color:var(--protein);font-weight:600}
+.empty-meal{border-top:1px dashed var(--line);padding:10px 14px;color:var(--muted);font-size:13px}
+.tag{display:inline-block;font-size:11px;font-weight:600;padding:1px 7px;border-radius:999px;background:var(--surface2);color:var(--muted);margin-right:4px;vertical-align:1px}
+
+h2.h{margin:0;font:700 24px/1.1 var(--display);letter-spacing:-.3px}
+.seg{display:inline-flex;background:var(--surface2);border-radius:999px;padding:3px}
+.seg button{border:0;background:none;border-radius:999px;padding:7px 16px;font-weight:600;color:var(--muted)}
+.seg button.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:11px 12px;min-width:0}
+.stat .v{font:700 20px/1.1 var(--display);font-variant-numeric:tabular-nums}
+.stat .l{font-size:12px;color:var(--muted);margin-top:3px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.card h3{margin:0 0 2px;font:600 16px/1.2 var(--display)}
+.card .cap{font-size:12.5px;color:var(--muted);margin:0 0 8px}
+.chart{width:100%;height:auto;display:block}
+.chart text{font:10px var(--body);fill:var(--muted)}
+.chart .grid{stroke:var(--line);stroke-width:1}
+.chart .tgt{stroke:var(--ink);stroke-width:1.2;stroke-dasharray:4 3;opacity:.7}
+.chart .bk{fill:var(--kcal)} .chart .bp{fill:var(--protein)} .chart .bo{fill:var(--over)}
+.chart .ghost{fill:var(--line)}
+.chart .today{font-weight:700;fill:var(--ink)}
+
+.form{display:flex;flex-direction:column;gap:14px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.fld{display:flex;flex-direction:column;gap:5px;min-width:0}
+.fld label,.field-label{font-size:12.5px;font-weight:600;color:var(--muted);letter-spacing:.3px}
+.fld input,textarea,.inp{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:11px 12px;font-size:16px;min-height:46px}
+.unitwrap{position:relative}
+.fld .unitwrap span{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 14px;font-weight:600;font-size:14px;min-height:38px}
+.chip.on{background:var(--ink);border-color:var(--ink);color:var(--onink)}
+.recent{display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px;scrollbar-width:none}
+.recent::-webkit-scrollbar{display:none}
+.recent .chip{flex:none;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.recent .chip b{font-weight:600}
+.result{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.result .big{font:700 30px/1 var(--display);font-variant-numeric:tabular-nums}
+.result .k{color:var(--kcal)} .result .p{color:var(--protein)}
+.why{font-size:13px;color:var(--muted);margin:10px 0 0}
+details summary{cursor:pointer;font-weight:600;font-size:14px}
+.btnrow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--line);
+  display:flex;justify-content:center;gap:4px;padding:6px max(16px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));z-index:20}
+nav.tabs button{flex:1;max-width:160px;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;color:var(--muted);font-size:11.5px;font-weight:600;border-radius:12px}
+nav.tabs button svg{width:24px;height:24px}
+nav.tabs button.on{color:var(--ink)}
+nav.tabs button.on svg{stroke:var(--protein)}
+
+#scrim{position:fixed;inset:0;background:rgba(10,14,12,.45);z-index:30}
+#sheet{position:fixed;left:0;right:0;bottom:0;max-height:calc(100% - env(safe-area-inset-top,0px) - 12px);background:var(--bg);border-radius:22px 22px 0 0;z-index:31;display:flex;flex-direction:column;box-shadow:0 -10px 40px rgba(0,0,0,.2);
+  max-width:620px;margin:0 auto;animation:up .22s ease-out}
+@keyframes up{from{transform:translateY(40px);opacity:.6}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){#sheet{animation:none}}
+.grab{width:40px;height:5px;border-radius:9px;background:var(--line);margin:8px auto 0}
+.sheet-head{display:flex;align-items:center;justify-content:space-between;padding:8px max(16px,env(safe-area-inset-right,0px)) 4px max(16px,env(safe-area-inset-left,0px))}
+.sheet-head h2{margin:0;font:700 20px/1.2 var(--display)}
+.icon-btn{border:0;background:var(--surface2);width:34px;height:34px;border-radius:50%;font-size:15px}
+.sheet-body{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:6px max(16px,env(safe-area-inset-right,0px)) 14px max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:10px}
+.sheet-foot{display:flex;gap:10px;padding:10px max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));border-top:1px solid var(--line);background:var(--bg)}
+.sheet-foot .btn.primary{flex:1}
+.fine{font-size:12px;color:var(--muted);margin:0}
+textarea{resize:none;line-height:1.4}
+.pax{display:flex;align-items:center;gap:10px}
+.pax button{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-size:20px}
+.pax button:disabled{opacity:.4}
+.pax output{min-width:30px;text-align:center;font:700 22px/1 var(--display);font-variant-numeric:tabular-nums}
+.pax span{color:var(--muted);font-size:13.5px}
+.photo-pick{display:grid;grid-template-columns:1.3fr 1fr;gap:10px}
+.photo-full{position:relative;border-radius:14px;overflow:hidden;background:var(--surface2)}
+.photo-full img{display:block;width:100%;max-height:220px;object-fit:cover}
+.photo-full button{position:absolute;right:8px;top:8px;border:0;border-radius:999px;background:rgba(0,0,0,.6);color:#fff;padding:6px 11px;font-size:13px;font-weight:600}
+.status{margin:0;font-size:13.5px;color:var(--muted)}
+.status:empty{display:none}
+.status.err{color:var(--over)}
+.status .dots::after{content:"";animation:dots 1.2s steps(4) infinite}
+@keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}
+.result-head{display:flex;gap:8px;align-items:center}
+.result-head input{flex:1;min-width:0;font-weight:600}
+.conf{font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--surface2);color:var(--muted);white-space:nowrap;text-transform:capitalize}
+.conf.high{background:var(--protein-soft);color:var(--protein)}
+.conf.low{background:var(--kcal-soft);color:var(--kcal)}
+.banner .link{padding:0}
+.lookup{display:flex;gap:8px;align-items:center}
+.lookup .btn{flex:1}
+.lookup .alt{font-size:13px;color:var(--protein);font-weight:600;text-decoration:none;white-space:nowrap;padding:8px 4px}
+#resultBlock{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px;display:flex;flex-direction:column;gap:10px}
+.item{display:grid;grid-template-columns:1fr 1fr 36px;gap:6px;padding-top:10px;border-top:1px solid var(--line)}
+.item .nm{grid-column:1 / -1;display:flex;gap:6px;align-items:center}
+.item .nm input{flex:1;min-width:0}
+.item .nm small{color:var(--muted);font-size:12px;max-width:34%;text-align:right}
+.item .q{flex:none;width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--surface2);display:inline-flex;align-items:center;justify-content:center;color:var(--muted)}
+.item .q svg{width:18px;height:18px}
+.item .q.disabled{opacity:.35;pointer-events:none}
+.item .unitwrap span{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:12.5px;pointer-events:none}
+.item .unitwrap input{padding-right:48px}
+.item .rm{border:0;background:none;color:var(--muted);font-size:18px}
+.link{border:0;background:none;color:var(--protein);font-weight:600;padding:6px 0;align-self:flex-start}
+.share-total{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding-top:10px;border-top:1px solid var(--line)}
+.share-total .lab{font-size:12px;color:var(--muted);grid-column:1 / -1}
+.share-total .v{font:700 22px/1 var(--display);font-variant-numeric:tabular-nums}
+.share-total .v.k{color:var(--kcal)} .share-total .v.p{color:var(--protein)}
+.share-total .w{font-size:12.5px;color:var(--muted);grid-column:1 / -1}
+
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--onink);padding:10px 16px;border-radius:12px;font-weight:600;font-size:14px;z-index:40;max-width:calc(100% - 32px);text-align:center}
+.banner{font-size:13px;background:var(--surface2);border-radius:12px;padding:10px 12px;color:var(--muted)}
+.banner b{color:var(--ink)}
+</style>
+</head>
+<body>
+<div id="app">
+  <main id="view" aria-live="polite"></main>
+  <nav class="tabs" aria-label="Sections">
+    <button data-tab="today" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v4.5l3 2"/></svg>Today</button>
+    <button data-tab="trends"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 19V11M10 19V6M15 19v-5M20 19V9"/></svg>Trends</button>
+    <button data-tab="targets"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg>Targets</button>
+  </nav>
+</div>
+
+<div id="scrim" hidden></div>
+<section id="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+  <div class="grab"></div>
+  <header class="sheet-head"><h2 id="sheetTitle">Log a meal</h2><button id="sheetClose" class="icon-btn" aria-label="Close">✕</button></header>
+  <div class="sheet-body">
+    <div id="recentBlock" hidden>
+      <div class="field-label" style="margin-bottom:6px">Recent</div>
+      <div class="recent" id="recentList"></div>
+    </div>
+    <input type="file" id="photoIn" accept="image/*" hidden>
+    <div id="photoEmpty" class="photo-pick">
+      <button type="button" class="btn primary" id="camBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 8h3l1.6-2.4h6.8L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.6"/></svg>Take photo</button>
+      <button type="button" class="btn" id="libBtn">From library</button>
+    </div>
+    <div id="photoFull" class="photo-full" hidden><img id="photoImg" alt="Your meal photo"><button id="photoRemove" type="button">Retake</button></div>
+    <label class="field-label" for="noteIn">Note <span style="font-weight:500">(optional with a photo)</span></label>
+    <textarea id="noteIn" rows="2" placeholder="e.g. chicken rice, extra egg, ate half the rice"></textarea>
+    <div id="noKey" class="banner" hidden>Estimates need a free Gemini key. <button class="link" type="button" data-go="targets" data-scroll="aiCard">Add one in Targets</button>. Until then, enter the numbers below.</div>
+    <button id="estimateBtn" class="btn primary wide" type="button">Estimate with Gemini</button>
+    <p id="estStatus" class="status"></p>
+    <div class="field-label">Meal</div>
+    <div class="chips" id="mealChips"></div>
+    <div class="field-label">Shared meal?</div>
+    <div class="pax"><button id="paxMinus" type="button" aria-label="Fewer people">−</button><output id="paxOut" class="num">1</output><button id="paxPlus" type="button" aria-label="More people">+</button><span id="paxHint">Just me</span></div>
+    <div id="resultBlock">
+      <div class="result-head"><input id="titleIn" class="inp" placeholder="Meal name (optional)" aria-label="Meal name"><span id="confChip" class="conf" hidden></span></div>
+      <p id="aiNote" class="fine" hidden></p>
+      <div class="fine" id="itemsCap">Check the numbers and edit anything that looks off.</div>
+      <div id="itemsList"></div>
+      <button id="addItem" class="link" type="button">+ Add item</button>
+      <div class="share-total" id="shareTotal"></div>
+    </div>
+  </div>
+  <footer class="sheet-foot"><button id="deleteBtn" class="btn danger" type="button" hidden>Delete</button><button id="saveBtn" class="btn primary" type="button" disabled>Save</button></footer>
+</section>
+<div id="toast" hidden></div>
+<input type="file" id="importIn" accept="application/json,.json" hidden>
+
+<script>
+'use strict';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=n=>Math.round(n||0).toLocaleString('en-SG');
+const pad=n=>String(n).padStart(2,'0');
+const keyOf=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const fromKey=k=>{const [y,m,d]=k.split('-').map(Number);return new Date(y,m-1,d)};
+const addDays=(k,n)=>{const d=fromKey(k);d.setDate(d.getDate()+n);return keyOf(d)};
+const todayKey=()=>keyOf(new Date());
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const MEALS=[{id:'breakfast',label:'Breakfast'},{id:'lunch',label:'Lunch'},{id:'dinner',label:'Dinner'},{id:'others',label:'Others',hint:'snacks, drinks'}];
+function mealByTime(){const h=new Date().getHours()+new Date().getMinutes()/60;return h>=5&&h<10.5?'breakfast':h>=11&&h<15?'lunch':h>=17.5&&h<22?'dinner':'others'}
+const SEARCH_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5"/></svg>';
+
+/* Google lookup links */
+function gQuery(text){return `${text.trim()} calories protein`}
+function gImg(text){return 'https://www.google.com/search?tbm=isch&q='+encodeURIComponent(gQuery(text))}
+function gWeb(text){return 'https://www.google.com/search?q='+encodeURIComponent(gQuery(text))}
+
+const S={days:{},profile:null,tab:'today',date:todayKey(),range:7,persisted:null,lastBackup:0};
+
+/* ---------------- storage: localStorage + IndexedDB mirror ---------------- */
+const LS='fuel-log-v1',DRAFT='fuel-log-draft';
+const idb={
+  db:null,
+  open(){return new Promise(res=>{try{const r=indexedDB.open('fuel-log',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>{this.db=r.result;res(true)};r.onerror=()=>res(false)}catch(e){res(false)}})},
+  get(k){return new Promise(res=>{if(!this.db)return res(null);try{const q=this.db.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>res(q.result??null);q.onerror=()=>res(null)}catch(e){res(null)}})},
+  set(k,v){if(!this.db)return;try{this.db.transaction('kv','readwrite').objectStore('kv').put(v,k)}catch(e){}}
+};
+const store={
+  snapshot(){return {v:1,days:S.days,profile:S.profile,lastBackup:S.lastBackup,saved:Date.now()}},
+  load(raw){if(!raw||typeof raw!=='object')return false;S.days=raw.days&&typeof raw.days==='object'?raw.days:{};S.profile=raw.profile||null;S.lastBackup=raw.lastBackup||0;return true},
+  async init(){
+    let ls=null;try{ls=JSON.parse(localStorage.getItem(LS)||'null')}catch(e){}
+    await idb.open();const ib=await idb.get(LS);
+    // use whichever copy is newer, so one being wiped does not lose data
+    const pick=[ls,ib].filter(Boolean).sort((a,b)=>(b.saved||0)-(a.saved||0))[0];
+    if(pick){this.load(pick);if(!ls||(ib&&(ib.saved||0)>(ls.saved||0)))this.save()}
+    try{if(navigator.storage?.persist){S.persisted=await navigator.storage.persisted();if(!S.persisted)S.persisted=await navigator.storage.persist()}}catch(e){}
+    render();
+  },
+  save(){
+    const snap=this.snapshot();
+    try{localStorage.setItem(LS,JSON.stringify(snap))}catch(e){toast('Phone storage is full. Export a backup and delete old entries.')}
+    idb.set(LS,snap);
+  }
+};
+const saveDay=()=>store.save(),saveProfile=()=>store.save();
+
+/* ---------------- targets ---------------- */
+const ACT={low:{l:'Mostly seated',m:1.2,g:1.0},light:{l:'Light exercise 1–3×/wk',m:1.375,g:1.2},active:{l:'Train 3–5×/wk',m:1.55,g:1.6},athlete:{l:'Hard training 6–7×/wk',m:1.725,g:2.0}};
+const GOAL={lose:{l:'Lose fat',f:.85,add:.2},maintain:{l:'Maintain',f:1,add:0},gain:{l:'Build muscle',f:1.1,add:0}};
+function calc(p){
+  if(!p)return null;const w=+p.weight,h=+p.height,a=+p.age;if(!(w>0&&h>0&&a>0))return null;
+  const act=ACT[p.activity]||ACT.active,goal=GOAL[p.goal]||GOAL.maintain;
+  const bmr=10*w+6.25*h-5*a+(p.sex==='f'?-161:5);
+  const tdee=bmr*act.m;const kcal=Math.round(tdee*goal.f/10)*10;
+  const gpk=Math.min(2.2,act.g+goal.add);const protein=Math.round(w*gpk);
+  return {bmr,tdee,kcal,protein,gpk,act,goal};
+}
+function targets(){
+  const c=calc(S.profile);const p=S.profile||{};
+  const kcal=+p.kcalOverride>0?+p.kcalOverride:c?.kcal;const protein=+p.proteinOverride>0?+p.proteinOverride:c?.protein;
+  return kcal||protein?{kcal:kcal||0,protein:protein||0}:null;
+}
+
+/* ---------------- helpers ---------------- */
+function dayTotals(key){const e=S.days[key]?.entries||[];return e.reduce((t,x)=>({kcal:t.kcal+(+x.kcal||0),protein:t.protein+(+x.protein||0)}),{kcal:0,protein:0})}
+function ring(val,target,color,soft){
+  const r=48,c=2*Math.PI*r,frac=target?Math.min(val/target,1):0;
+  return `<svg viewBox="0 0 116 116" aria-hidden="true"><circle cx="58" cy="58" r="${r}" fill="none" stroke="var(${soft})" stroke-width="11"/>
+  <circle cx="58" cy="58" r="${r}" fill="none" stroke="var(${color})" stroke-width="11" stroke-linecap="round" stroke-dasharray="${(frac*c).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 58 58)"/></svg>`;
+}
+function dateLabel(k){
+  const t=todayKey();if(k===t)return 'Today';if(k===addDays(t,-1))return 'Yesterday';
+  return fromKey(k).toLocaleDateString('en-SG',{weekday:'long'});
+}
+let toastT;function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2800)}
+function entryCount(){return Object.values(S.days).reduce((n,d)=>n+(d.entries||[]).length,0)}
+function recentMeals(){
+  const all=[];for(const d of Object.values(S.days))for(const e of d.entries||[])all.push(e);
+  all.sort((a,b)=>b.ts-a.ts);const seen=new Set(),out=[];
+  for(const e of all){const k=(e.name||'').toLowerCase().trim();if(!k||seen.has(k))continue;seen.add(k);out.push(e);if(out.length>=10)break}
+  return out;
+}
+
+/* ---------------- views ---------------- */
+function render(){
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===S.tab));
+  const v=$('#view');
+  if(S.tab==='today')v.innerHTML=viewToday();
+  else if(S.tab==='trends')v.innerHTML=viewTrends();
+  else if(!v.querySelector('#tForm'))v.innerHTML=viewTargets();
+  else updateTargetsResult();
+}
+function syncChip(){return '<span class="sync"><i></i>Saved on this phone</span>'}
+function backupNag(){
+  const n=entryCount();if(n<5)return '';
+  const days=S.lastBackup?Math.floor((Date.now()-S.lastBackup)/864e5):null;
+  if(days!==null&&days<14)return '';
+  return `<div class="banner"><b>${days===null?'No backup yet.':`Last backup ${days} days ago.`}</b> Your log lives only on this phone. <button class="link" style="padding:0" data-go="targets" data-scroll="backup">Export a backup</button></div>`;
+}
+function viewToday(){
+  const k=S.date,t=dayTotals(k),T=targets(),isToday=k===todayKey();
+  const d=fromKey(k).toLocaleDateString('en-SG',{day:'numeric',month:'short',year:'numeric'});
+  const gauge=(val,tg,unit,label,col,soft)=>{
+    const over=tg&&val>tg;
+    const left=!tg?`<div class="notarget">No target yet · <button data-go="targets">Set one</button></div>`
+      :over?`<div class="left"><b class="num">${fmt(val-tg)}${unit==='g'?' g':''}</b> over ${fmt(tg)}</div>`
+      :`<div class="left"><b class="num">${fmt(tg-val)}${unit==='g'?' g':''}</b> left of ${fmt(tg)}</div>`;
+    return `<div class="gauge ${over&&unit==='kcal'?'over':''}">${ring(val,tg,col,soft)}
+      <div class="mid"><div class="t">${fmt(val)}</div><div class="u">${label}</div></div>${left}</div>`;
+  };
+  const meals=MEALS.map(m=>{
+    const list=(S.days[k]?.entries||[]).filter(e=>e.meal===m.id).sort((a,b)=>a.ts-b.ts);
+    const mt=list.reduce((a,e)=>[a[0]+(+e.kcal||0),a[1]+(+e.protein||0)],[0,0]);
+    return `<section class="meal"><div class="meal-h"><h3>${m.label}${m.hint?` <span>${m.hint}</span>`:''}</h3>
+      <div class="r">${list.length?`<span class="tot num">${fmt(mt[0])} kcal · ${fmt(mt[1])} g</span>`:''}<button class="add" data-add="${m.id}" aria-label="Add to ${m.label}">+</button></div></div>
+      ${list.length?list.map(e=>`<button class="entry" data-edit="${e.id}"><div class="main"><div class="nm">${esc(e.name||'Meal')}</div>
+        <div class="sub">${e.pax>1?`<span class="tag">÷${e.pax} pax</span>`:''}${esc((e.items||[]).map(i=>i.name).filter(Boolean).join(' · '))}</div></div>
+        <div class="vals num"><div class="k">${fmt(e.kcal)} kcal</div><div class="p">${fmt(e.protein)} g</div></div></button>`).join('')
+        :`<div class="empty-meal">Nothing logged</div>`}</section>`;
+  }).join('');
+  return `<div class="wrap">
+    <div class="top"><span class="brand">Fuel Log</span>${syncChip()}</div>
+    <div class="daynav"><button data-day="-1" aria-label="Previous day">‹</button><div class="lbl">${dateLabel(k)}<small>${d}</small></div><button data-day="1" aria-label="Next day" ${isToday?'disabled':''}>›</button></div>
+    <div class="summary">${gauge(t.kcal,T?.kcal,'kcal','kcal','--kcal','--kcal-soft')}${gauge(t.protein,T?.protein,'g','g protein','--protein','--protein-soft')}</div>
+    <div class="btnrow" style="grid-template-columns:1.4fr 1fr">
+      <button class="btn primary" data-snap><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 8h3l1.6-2.4h6.8L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.6"/></svg>Snap a meal</button>
+      <button class="btn" data-add="">Enter manually</button>
+    </div>
+    ${backupNag()}
+    ${meals}
+  </div>`;
+}
+
+function viewTrends(){
+  const n=S.range,end=todayKey(),keys=[];for(let i=n-1;i>=0;i--)keys.push(addDays(end,-i));
+  const T=targets();const tot=keys.map(dayTotals);const logged=keys.filter(k=>(S.days[k]?.entries||[]).length);
+  const lt=logged.map(dayTotals);
+  const avgK=lt.length?lt.reduce((a,x)=>a+x.kcal,0)/lt.length:0, avgP=lt.length?lt.reduce((a,x)=>a+x.protein,0)/lt.length:0;
+  const hit=T?.protein?lt.filter(x=>x.protein>=T.protein).length:null;
+  const labels=keys.map((k,i)=>{const d=fromKey(k);if(n<=7)return d.toLocaleDateString('en-SG',{weekday:'short'});return (i%5===0||i===n-1)?String(d.getDate()):''});
+  const sub=n<=7?'Last 7 days':'Last 30 days';
+  return `<div class="wrap">
+    <div class="top"><h2 class="h">Trends</h2><div class="seg" role="tablist"><button data-range="7" class="${n===7?'on':''}">Week</button><button data-range="30" class="${n===30?'on':''}">Month</button></div></div>
+    <div class="stats">
+      <div class="stat"><div class="v">${lt.length?fmt(avgK):'–'}</div><div class="l">avg kcal / day</div></div>
+      <div class="stat"><div class="v">${lt.length?fmt(avgP)+' g':'–'}</div><div class="l">avg protein / day</div></div>
+      <div class="stat"><div class="v">${hit==null?`${lt.length}/${n}`:`${hit}/${lt.length}`}</div><div class="l">${hit==null?'days logged':'days hit protein'}</div></div>
+    </div>
+    <div class="card"><h3>Calories</h3><p class="cap">${sub}${T?.kcal?` · dashed line is your ${fmt(T.kcal)} kcal target`:''}</p>${bars(tot.map(x=>x.kcal),labels,T?.kcal,'bk',true)}</div>
+    <div class="card"><h3>Protein</h3><p class="cap">${sub}${T?.protein?` · dashed line is your ${fmt(T.protein)} g target`:''}</p>${bars(tot.map(x=>x.protein),labels,T?.protein,'bp',false)}</div>
+    ${!logged.length?'<div class="banner">Log a few meals and your daily totals will chart here.</div>':''}
+  </div>`;
+}
+function niceStep(x){const e=Math.pow(10,Math.floor(Math.log10(x))),f=x/e;return (f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*e}
+function bars(vals,labels,target,cls,overRed){
+  const W=340,H=160,pl=34,pr=6,pt=10,pb=22,n=vals.length,iw=W-pl-pr,ih=H-pt-pb;
+  const mx=Math.max(target||0,...vals,1);const step=niceStep(mx/3);const top=Math.ceil(mx*1.05/step)*step;
+  const y=v=>pt+ih-(v/top)*ih;const bw=iw/n;let s=`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Daily totals chart">`;
+  for(let v=0;v<=top+1e-9;v+=step){s+=`<line class="grid" x1="${pl}" x2="${W-pr}" y1="${y(v)}" y2="${y(v)}"/><text x="${pl-5}" y="${y(v)+3}" text-anchor="end">${v>=1000?(v/1000)+'k':v}</text>`}
+  vals.forEach((v,i)=>{const x=pl+i*bw+bw*.16,w=bw*.68;
+    if(v>0){const h=Math.max(1.5,(v/top)*ih);const c=overRed&&target&&v>target*1.1?'bo':cls;s+=`<rect class="${c}" x="${x.toFixed(1)}" y="${(pt+ih-h).toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" rx="${Math.min(3,w/3).toFixed(1)}"/>`}
+    else s+=`<rect class="ghost" x="${x.toFixed(1)}" y="${pt+ih-2}" width="${w.toFixed(1)}" height="2"/>`;
+    if(labels[i])s+=`<text x="${(pl+i*bw+bw/2).toFixed(1)}" y="${H-6}" text-anchor="middle" class="${i===n-1?'today':''}">${labels[i]}</text>`});
+  if(target)s+=`<line class="tgt" x1="${pl}" x2="${W-pr}" y1="${y(target)}" y2="${y(target)}"/>`;
+  return s+'</svg>';
+}
+
+function viewTargets(){
+  const p=S.profile||{};const sel=(v,o)=>v===o?'on':'';
+  const n=entryCount(),days=Object.values(S.days).filter(d=>(d.entries||[]).length).length;
+  const lb=S.lastBackup?new Date(S.lastBackup).toLocaleDateString('en-SG',{day:'numeric',month:'short',year:'numeric'}):'never';
+  return `<div class="wrap">
+    <div class="top"><h2 class="h">Daily targets</h2>${syncChip()}</div>
+    <div class="card" id="tResult"></div>
+    <form class="form" id="tForm" novalidate>
+      <div class="row3">
+        <div class="fld"><label for="tAge">Age</label><input id="tAge" inputmode="numeric" value="${esc(p.age||'')}" placeholder="30"></div>
+        <div class="fld"><label for="tW">Weight</label><div class="unitwrap"><input id="tW" inputmode="decimal" value="${esc(p.weight||'')}" placeholder="70"><span>kg</span></div></div>
+        <div class="fld"><label for="tH">Height</label><div class="unitwrap"><input id="tH" inputmode="numeric" value="${esc(p.height||'')}" placeholder="172"><span>cm</span></div></div>
+      </div>
+      <div class="fld"><label>Formula basis</label><div class="chips" data-group="sex"><button type="button" class="chip ${sel(p.sex||'m','m')}" data-v="m">Male</button><button type="button" class="chip ${sel(p.sex,'f')}" data-v="f">Female</button></div></div>
+      <div class="fld"><label>Activity</label><div class="chips" data-group="activity">${Object.entries(ACT).map(([k,a])=>`<button type="button" class="chip ${sel(p.activity||'active',k)}" data-v="${k}">${a.l}</button>`).join('')}</div></div>
+      <div class="fld"><label>Goal</label><div class="chips" data-group="goal">${Object.entries(GOAL).map(([k,g])=>`<button type="button" class="chip ${sel(p.goal||'maintain',k)}" data-v="${k}">${g.l}</button>`).join('')}</div></div>
+      <details ${p.kcalOverride||p.proteinOverride?'open':''}><summary>Use my own numbers instead</summary>
+        <div class="row2" style="margin-top:10px">
+          <div class="fld"><label for="tOK">Calories</label><div class="unitwrap"><input id="tOK" inputmode="numeric" value="${esc(p.kcalOverride||'')}" placeholder="auto"><span>kcal</span></div></div>
+          <div class="fld"><label for="tOP">Protein</label><div class="unitwrap"><input id="tOP" inputmode="numeric" value="${esc(p.proteinOverride||'')}" placeholder="auto"><span>g</span></div></div>
+        </div></details>
+      <button class="btn primary wide" id="tSave" type="submit">Save targets</button>
+      <p class="fine">Calories use the Mifflin-St Jeor formula with an activity multiplier. Protein uses 1.0–2.0 g per kg of body weight depending on training, plus 0.2 g/kg when cutting. These are starting points; adjust after a few weeks based on how your weight moves.</p>
+    </form>
+    <div class="card" id="aiCard">
+      <h3>Photo estimates</h3>
+      <p class="cap">Uses Google's free Gemini API to read your photo. ${ai.key?'A key is saved on this phone.':'Paste a free key to turn it on.'}</p>
+      <div class="fld"><label for="aiKey">Gemini API key</label><input id="aiKey" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" value="${esc(ai.key)}" placeholder="AIza…"></div>
+      <div class="btnrow" style="margin-top:10px"><button class="btn primary" type="button" data-aisave>Save &amp; test</button><a class="btn" href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Get a free key</a></div>
+      <p class="fine" style="margin-top:8px">The key stays on this phone and is left out of backups. On the free tier Google may use your photos and notes to improve its products.</p>
+    </div>
+    <div class="card" id="backup">
+      <h3>Your data</h3>
+      <p class="cap">${fmt(n)} entries across ${fmt(days)} days, stored on this phone only. Last backup: ${lb}.${S.persisted===false?' iOS may clear it if the app goes unused for weeks, so keep a backup.':''}</p>
+      <div class="btnrow"><button class="btn" data-export>Export backup</button><button class="btn" data-import>Import backup</button></div>
+      <p class="fine" style="margin-top:8px">Export saves a .json file you can keep in Files or iCloud Drive. Import replaces what is on this phone with the file's contents.</p>
+    </div>
+  </div>`;
+}
+function readTargetsForm(){
+  const g=n=>document.querySelector(`[data-group="${n}"] .chip.on`)?.dataset.v;
+  return {age:$('#tAge').value.trim(),weight:$('#tW').value.trim(),height:$('#tH').value.trim(),sex:g('sex'),activity:g('activity'),goal:g('goal'),kcalOverride:$('#tOK').value.trim(),proteinOverride:$('#tOP').value.trim()};
+}
+function updateTargetsResult(){
+  const el=$('#tResult');if(!el)return;const p=readTargetsForm();const c=calc(p);
+  const k=+p.kcalOverride>0?+p.kcalOverride:c?.kcal,pr=+p.proteinOverride>0?+p.proteinOverride:c?.protein;
+  if(!k&&!pr){el.innerHTML='<h3>Your numbers</h3><p class="cap" style="margin:4px 0 0">Enter age, weight and height to get a daily calorie and protein target.</p>';return}
+  el.innerHTML=`<div class="result"><div><div class="big k">${k?fmt(k):'–'}</div><div class="fine">kcal per day</div></div><div><div class="big p">${pr?fmt(pr)+' g':'–'}</div><div class="fine">protein per day</div></div></div>
+   ${c?`<p class="why">Resting burn about ${fmt(c.bmr)} kcal × ${c.act.m} for activity = ${fmt(c.tdee)} kcal maintenance${c.goal.f!==1?`, ${c.goal.f<1?'−15%':'+10%'} for your goal`:''}. Protein at ${c.gpk.toFixed(1)} g per kg.</p>`:''}
+   ${+p.kcalOverride>0||+p.proteinOverride>0?'<p class="why">Using your own number where you set one.</p>':''}`;
+}
+
+/* ---------------- backup ---------------- */
+async function exportBackup(){
+  S.lastBackup=Date.now();
+  const data=JSON.stringify(store.snapshot(),null,1);
+  const name=`fuel-log-backup-${todayKey()}.json`;
+  const file=new File([data],name,{type:'application/json'});
+  try{
+    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'Fuel Log backup'});store.save();render();toast('Backup exported');return}
+  }catch(e){if(e?.name==='AbortError'){S.lastBackup=0;return}}
+  const a=document.createElement('a');a.href=URL.createObjectURL(file);a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);store.save();render();toast('Backup downloaded');
+}
+$('#importIn').onchange=async e=>{
+  const f=e.target.files[0];e.target.value='';if(!f)return;
+  try{
+    const raw=JSON.parse(await f.text());
+    if(!raw||typeof raw.days!=='object')throw 0;
+    const n=Object.values(raw.days).reduce((a,d)=>a+(d.entries||[]).length,0);
+    if(!confirm(`Replace the log on this phone with ${n} entries from this backup?`))return;
+    store.load(raw);store.save();$('#view').innerHTML='';render();if(S.tab==='targets')updateTargetsResult();toast('Backup restored');
+  }catch(err){toast('That file is not a Fuel Log backup.')}
+};
+
+/* ---------------- interactions ---------------- */
+document.addEventListener('click',e=>{
+  const t=e.target.closest('button');if(!t)return;
+  if(t.dataset.tab){S.tab=t.dataset.tab;$('#view').innerHTML='';render();if(S.tab==='targets')updateTargetsResult();$('#view').scrollTop=0;return}
+  if(t.dataset.go){if(t.closest('#sheet'))closeSheet();S.tab=t.dataset.go;$('#view').innerHTML='';render();updateTargetsResult();if(t.dataset.scroll)$('#'+t.dataset.scroll)?.scrollIntoView({behavior:'smooth'});return}
+  if(t.dataset.day){const nk=addDays(S.date,+t.dataset.day);if(nk<=todayKey()){S.date=nk;render()}return}
+  if(t.dataset.range){S.range=+t.dataset.range;render();return}
+  if(t.hasAttribute('data-aisave')){saveKey();return}
+  if(t.hasAttribute('data-export')){exportBackup();return}
+  if(t.hasAttribute('data-import')){$('#importIn').click();return}
+  if(t.hasAttribute('data-snap')){openSheet({meal:mealByTime()});pickPhoto(true);return}
+  if(t.dataset.add!==undefined&&!t.closest('#sheet')){openSheet({meal:t.dataset.add||mealByTime()});return}
+  if(t.dataset.edit){const en=(S.days[S.date]?.entries||[]).find(x=>x.id===t.dataset.edit);if(en)openSheet({entry:en});return}
+  const grp=t.closest('[data-group]');
+  if(grp&&t.classList.contains('chip')){grp.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',c===t));updateTargetsResult();return}
+});
+document.addEventListener('input',e=>{if(e.target.closest('#tForm'))updateTargetsResult()});
+document.addEventListener('submit',e=>{
+  if(e.target.id!=='tForm')return;e.preventDefault();
+  const p=readTargetsForm();if(!calc(p)&&!(+p.kcalOverride>0)&&!(+p.proteinOverride>0)){toast('Add age, weight and height first');return}
+  S.profile={...p,updated:Date.now()};saveProfile();toast('Targets saved');
+});
+
+/* ---------------- sheet ---------------- */
+let D=null;
+function blankItem(name=''){return {name,portion:'',kcal:'',protein:''}}
+function openSheet({meal,entry,draft}){
+  if(draft)D=draft;
+  else D=entry?{edit:entry.id,date:S.date,meal:entry.meal,pax:entry.pax||1,note:entry.note||'',title:entry.name||'',items:(entry.items||[]).map(i=>({...i}))}
+             :{edit:null,date:S.date,meal,pax:1,note:'',title:'',items:[blankItem()]};
+  if(!D.items.length)D.items.push(blankItem());
+  $('#sheetTitle').textContent=D.edit?'Edit entry':(D.date===todayKey()?'Log a meal':'Log for '+fromKey(D.date).toLocaleDateString('en-SG',{day:'numeric',month:'short'}));
+  $('#noteIn').value=D.note;
+  $('#deleteBtn').hidden=!D.edit;$('#deleteBtn').textContent='Delete';delete $('#deleteBtn').dataset.arm;
+  setPhoto(null);D.conf=D.conf||null;D.aiNote='';$('#estStatus').textContent='';$('#estStatus').className='status';
+  renderRecent();renderChips();renderPax();renderItems();updateLookup();
+  $('#scrim').hidden=false;$('#sheet').hidden=false;
+}
+function closeSheet(){setPhoto(null);D=null;clearDraft();$('#sheet').hidden=true;$('#scrim').hidden=true}
+$('#sheetClose').onclick=closeSheet;$('#scrim').onclick=closeSheet;
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#sheet').hidden)closeSheet()});
+
+/* keep the draft if iOS reloads the app while you're in Google */
+function saveDraft(){if(D)try{const {file,url,busy,...rest}=D;localStorage.setItem(DRAFT,JSON.stringify({...rest,at:Date.now()}))}catch(e){}}
+function clearDraft(){try{localStorage.removeItem(DRAFT)}catch(e){}}
+function restoreDraft(){
+  try{const d=JSON.parse(localStorage.getItem(DRAFT)||'null');if(d&&Date.now()-d.at<3*3600e3){delete d.at;openSheet({draft:d});toast('Picked up where you left off')}else clearDraft()}catch(e){}
+}
+document.addEventListener('visibilitychange',()=>{if(document.hidden)saveDraft()});
+window.addEventListener('pagehide',saveDraft);
+
+function renderRecent(){
+  const list=D.edit?[]:recentMeals();$('#recentBlock').hidden=!list.length;
+  $('#recentList').innerHTML=list.map(e=>`<button type="button" class="chip" data-recent="${e.id}"><b>${esc(e.name)}</b> · ${fmt(e.kcal)} kcal</button>`).join('');
+}
+$('#recentList').addEventListener('click',e=>{
+  const b=e.target.closest('[data-recent]');if(!b)return;
+  let src=null;for(const d of Object.values(S.days)){src=(d.entries||[]).find(x=>x.id===b.dataset.recent);if(src)break}
+  if(!src)return;
+  D.title=src.name;D.pax=src.pax||1;D.items=(src.items||[]).map(i=>({...i}));if(!D.items.length)D.items=[{name:src.name,portion:'',kcal:src.kcal*D.pax,protein:src.protein*D.pax}];
+  renderPax();renderItems();toast('Filled from '+src.name);
+});
+function renderChips(){
+  $('#mealChips').innerHTML=MEALS.map(m=>`<button type="button" class="chip ${D.meal===m.id?'on':''}" data-meal="${m.id}">${m.label}</button>`).join('');
+}
+$('#mealChips').addEventListener('click',e=>{const b=e.target.closest('[data-meal]');if(!b)return;D.meal=b.dataset.meal;renderChips();updateSave()});
+function renderPax(){$('#paxOut').textContent=D.pax;$('#paxHint').textContent=D.pax===1?'Just me':`Split across ${D.pax} people, you log 1/${D.pax}`;$('#paxMinus').disabled=D.pax<=1;
+  $('#itemsCap').textContent=D.pax>1?'Enter amounts for the whole shared dish. Your share is worked out below.':'Check the numbers and edit anything that looks off.';updateTotals()}
+$('#paxMinus').onclick=()=>{if(D.pax>1){D.pax--;renderPax()}};
+$('#paxPlus').onclick=()=>{if(D.pax<30){D.pax++;renderPax()}};
+$('#noteIn').addEventListener('input',e=>{
+  const prev=D.note.trim();D.note=e.target.value;
+  // mirror the description into a single untouched item so you don't type it twice
+  if(D.items.length===1&&(D.items[0].name.trim()===''||D.items[0].name.trim()===prev))D.items[0].name=D.note.trim(),syncItemNames();
+  updateLookup();
+});
+function setLink(a,href){if(href){a.href=href;a.classList.remove('disabled')}else{a.removeAttribute('href');a.classList.add('disabled')}}
+function updateLookup(){if(!D)return;const k=!!ai.key;$('#noKey').hidden=k;$('#estimateBtn').hidden=!k;const b=$('#estimateBtn');b.disabled=!(D.file||D.note.trim())||!!D.busy;b.textContent=D.conf?'Re-estimate':'Estimate with Gemini'}
+
+function renderItems(){
+  $('#titleIn').value=D.title;
+  const cc=$('#confChip');cc.hidden=!D.conf;cc.className='conf '+(D.conf||'');cc.textContent=D.conf?D.conf+' confidence':'';
+  $('#aiNote').hidden=!D.aiNote;$('#aiNote').textContent=D.aiNote||'';
+  $('#itemsList').innerHTML=D.items.map((it,i)=>`<div class="item" data-i="${i}">
+     <div class="nm"><input class="inp" data-f="name" value="${esc(it.name)}" placeholder="Food (optional)" aria-label="Food name">${it.portion?`<small>${esc(it.portion)}</small>`:''}
+       <a class="q ${it.name.trim()?'':'disabled'}" data-q="${i}" ${it.name.trim()?`href="${esc(gImg(it.name))}"`:''} target="_blank" rel="noopener" aria-label="Look up this item on Google">${SEARCH_ICON}</a></div>
+     <div class="unitwrap"><input class="inp num" data-f="kcal" inputmode="numeric" value="${it.kcal===''||it.kcal==null?'':Math.round(it.kcal)}" placeholder="0" aria-label="Calories"><span>kcal</span></div>
+     <div class="unitwrap"><input class="inp num" data-f="protein" inputmode="decimal" value="${it.protein===''||it.protein==null?'':Math.round(it.protein*10)/10}" placeholder="0" aria-label="Protein grams"><span>g pro</span></div>
+     <button class="rm" type="button" data-rm="${i}" aria-label="Remove item" ${D.items.length<2?'style="visibility:hidden"':''}>✕</button></div>`).join('');
+  updateTotals();
+}
+function syncItemNames(){
+  document.querySelectorAll('#itemsList .item').forEach(r=>{const it=D.items[+r.dataset.i];const inp=r.querySelector('[data-f="name"]');if(inp&&document.activeElement!==inp)inp.value=it.name;updateItemLink(r,it)});
+}
+function updateItemLink(row,it){const a=row.querySelector('.q');const n=it.name.trim();if(n){a.href=gImg(n);a.classList.remove('disabled')}else{a.removeAttribute('href');a.classList.add('disabled')}}
+$('#itemsList').addEventListener('input',e=>{const r=e.target.closest('.item');if(!r)return;const it=D.items[+r.dataset.i],f=e.target.dataset.f;
+  it[f]=f==='name'?e.target.value:(e.target.value===''?'':parseFloat(e.target.value)||0);
+  if(f==='name')updateItemLink(r,it);updateTotals()});
+$('#itemsList').addEventListener('click',e=>{
+  if(e.target.closest('.q')){saveDraft();return}
+  const b=e.target.closest('[data-rm]');if(!b)return;D.items.splice(+b.dataset.rm,1);if(!D.items.length)D.items.push(blankItem());renderItems()});
+$('#titleIn').addEventListener('input',e=>{D.title=e.target.value;updateLookup();updateSave()});
+$('#addItem').onclick=()=>{D.items.push(blankItem());renderItems();$('#itemsList .item:last-child input').focus()};
+function totals(){return D.items.reduce((t,i)=>({kcal:t.kcal+(+i.kcal||0),protein:t.protein+(+i.protein||0)}),{kcal:0,protein:0})}
+function updateTotals(){
+  if(!D)return;const t=totals(),s={kcal:t.kcal/D.pax,protein:t.protein/D.pax};
+  $('#shareTotal').innerHTML=`<div class="lab">${D.pax>1?`Your share (1 of ${D.pax})`:'You log'}</div>
+   <div><div class="v k num">${fmt(s.kcal)}</div><div class="fine">kcal</div></div><div><div class="v p num">${fmt(s.protein)} g</div><div class="fine">protein</div></div>
+   ${D.pax>1?`<div class="w num">Whole dish: ${fmt(t.kcal)} kcal · ${fmt(t.protein)} g protein</div>`:''}`;
+  updateSave();
+}
+function updateSave(){const t=D?totals():{kcal:0,protein:0};$('#saveBtn').disabled=!D||!(t.kcal>0||t.protein>0);$('#saveBtn').textContent=D?`Save to ${MEALS.find(m=>m.id===D.meal).label}`:'Save'}
+
+$('#saveBtn').onclick=()=>{
+  const t=totals();const items=D.items.filter(i=>i.name||+i.kcal||+i.protein).map(i=>({name:(i.name||'').trim(),portion:i.portion||'',kcal:Math.round(+i.kcal||0),protein:Math.round((+i.protein||0)*10)/10}));
+  const name=(D.title.trim()||items.map(i=>i.name).filter(Boolean).join(', ')||D.note.trim()||MEALS.find(m=>m.id===D.meal).label).slice(0,60);
+  const old=S.days[D.date]?.entries||[];
+  const e={id:D.edit||uid(),meal:D.meal,name,items,pax:D.pax,note:D.note.trim().slice(0,300),
+    kcal:Math.round(t.kcal/D.pax),protein:Math.round(t.protein/D.pax*10)/10,ts:D.edit?(old.find(x=>x.id===D.edit)?.ts||Date.now()):Date.now()};
+  const entries=D.edit?old.map(x=>x.id===D.edit?e:x):[...old,e];
+  S.days={...S.days,[D.date]:{kind:'day',date:D.date,entries}};saveDay();
+  const label=MEALS.find(m=>m.id===e.meal).label,wasEdit=!!D.edit;closeSheet();render();toast(wasEdit?'Updated':`Added to ${label}`);
+};
+$('#deleteBtn').onclick=()=>{
+  const b=$('#deleteBtn');if(!b.dataset.arm){b.dataset.arm='1';b.textContent='Tap again to delete';return}
+  const key=D.date;const entries=(S.days[key]?.entries||[]).filter(x=>x.id!==D.edit);
+  const days={...S.days};if(entries.length)days[key]={kind:'day',date:key,entries};else delete days[key];S.days=days;
+  saveDay();closeSheet();render();toast('Deleted');
+};
+
+/* ---------------- photo + Gemini estimate ---------------- */
+const AIK='fuel-log-gemini',AIM='fuel-log-gemini-model';
+const ai={
+  get key(){try{return localStorage.getItem(AIK)||''}catch(e){return ''}},
+  set key(v){try{v?localStorage.setItem(AIK,v):localStorage.removeItem(AIK)}catch(e){}},
+  models(){let m='';try{m=localStorage.getItem(AIM)||''}catch(e){}return [...new Set([m,'gemini-flash-latest','gemini-2.5-flash','gemini-2.0-flash'].filter(Boolean))]}
+};
+class AIError extends Error{constructor(code,msg){super(msg||code);this.code=code}}
+async function gemini(parts,signal){
+  const key=ai.key;if(!key)throw new AIError('no_key');
+  let last=null;
+  for(const model of ai.models()){
+    let r;
+    try{r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,{method:'POST',signal,
+      headers:{'Content-Type':'application/json','x-goog-api-key':key},
+      body:JSON.stringify({contents:[{role:'user',parts}],generationConfig:{responseMimeType:'application/json',temperature:0.2}})})}
+    catch(e){if(e.name==='AbortError')throw new AIError('cancelled');throw new AIError('network')}
+    const j=await r.json().catch(()=>({}));
+    if(r.status===404){last=new AIError('model');continue}
+    if(!r.ok){const m=j.error?.message||'';
+      if(r.status===429)throw new AIError('rate_limited',m);
+      if((r.status===400&&/api key/i.test(m))||r.status===401||r.status===403)throw new AIError('bad_key',m);
+      throw new AIError('failed',m)}
+    try{localStorage.setItem(AIM,model)}catch(e){}
+    const txt=(j.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('').trim();
+    if(!txt)throw new AIError('refused');
+    try{return JSON.parse(txt.replace(/^```(?:json)?\s*|\s*```$/g,''))}catch(e){throw new AIError('invalid_json')}
+  }
+  throw last||new AIError('failed');
+}
+function toJpegB64(file,max=1280){
+  return new Promise((res,rej)=>{
+    const url=URL.createObjectURL(file),img=new Image();
+    img.onload=()=>{try{const sc=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight));const c=document.createElement('canvas');
+      c.width=Math.round(img.naturalWidth*sc);c.height=Math.round(img.naturalHeight*sc);c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+      URL.revokeObjectURL(url);res(c.toDataURL('image/jpeg',.82).split(',')[1])}catch(e){rej(new AIError('image'))}};
+    img.onerror=()=>{URL.revokeObjectURL(url);rej(new AIError('image'))};img.src=url;
+  });
+}
+const AI_MSG={no_key:'Add a Gemini key in Targets first.',bad_key:'Google rejected the API key. Check it in Targets.',rate_limited:'Free limit reached for now. Wait a minute (or until tomorrow) and try again, or enter the numbers yourself.',
+  network:'No connection to Google. Check your internet and try again.',refused:'Gemini could not estimate this. Try another photo or add a note.',invalid_json:'The estimate came back garbled. Tap Estimate to try again.',
+  image:'That photo could not be read. Try a different one.',model:'No Gemini model is available for this key.',failed:'The estimate failed. Try again in a moment.'};
+let ctl=null;
+async function estimate(){
+  if(!D||D.busy)return;const st=$('#estStatus');
+  if(!D.file&&!D.note.trim()){st.className='status err';st.textContent='Add a photo or describe what you ate.';return}
+  ctl?.abort();ctl=new AbortController();const my=D;my.busy=true;updateLookup();
+  st.className='status';st.innerHTML=`<span class="dots">${my.file?'Looking at your plate':'Working it out'}</span>`;
+  const prompt=`You estimate nutrition for a calorie and protein tracker. The user lives in Singapore, so expect hawker, kopitiam and other local dishes as well as Western, Japanese, Korean and other food.
+${my.file?'Identify each distinct food or drink in the photo and estimate the amount visible.':'Estimate from the description below.'}
+${my.pax>1?`This is a SHARED meal split across ${my.pax} people. Estimate the WHOLE spread as pictured or described (all plates together, not one person's share). The app divides by ${my.pax}.`:"This is one person's meal."}
+${my.note.trim()?`The user's note (trust it over the photo when they conflict, e.g. portions, extras, what was not eaten): "${my.note.trim().slice(0,600)}"`:''}
+Use typical Singapore portion sizes and cooking styles (e.g. oil in fried rice/noodles, sugar in kopi and teh) unless shown otherwise. Protein in grams.
+Reply with only JSON in this shape:
+{"title":"short meal name, max 6 words","items":[{"name":"food name","portion":"e.g. 1 plate, ~300 g","kcal":0,"protein_g":0}],"confidence":"low|medium|high","note":"one short sentence on the main assumption, or empty string"}
+If there is no food or drink, return {"title":"","items":[],"confidence":"low","note":"I could not find any food in this photo."}`;
+  try{
+    const parts=[{text:prompt}];
+    if(my.file)parts.push({inline_data:{mime_type:'image/jpeg',data:await toJpegB64(my.file)}});
+    const r=await gemini(parts,ctl.signal);
+    if(D!==my)return;
+    const items=Array.isArray(r?.items)?r.items.map(i=>({name:String(i.name||'').slice(0,60),portion:String(i.portion||'').slice(0,40),kcal:Math.max(0,+i.kcal||0),protein:Math.max(0,+(i.protein_g??i.protein)||0)})).filter(i=>i.name):[];
+    if(!items.length){st.className='status err';st.textContent=r?.note||'No food found. Try another photo or add a note.';return}
+    D.items=items;D.title=String(r.title||items.map(i=>i.name).join(', ')).slice(0,60);D.conf=['low','medium','high'].includes(r.confidence)?r.confidence:null;D.aiNote=String(r.note||'');
+    st.textContent='';renderItems();
+  }catch(e){
+    if(D!==my||e?.code==='cancelled')return;
+    st.className='status err';st.textContent=AI_MSG[e?.code]||AI_MSG.failed;
+  }finally{if(D===my){my.busy=false;updateLookup()}}
+}
+$('#estimateBtn').onclick=estimate;
+$('#noteIn').addEventListener('input',updateLookup);
+async function saveKey(){
+  const v=$('#aiKey').value.trim();ai.key=v;
+  if(!v){toast('Key removed');$('#view').innerHTML='';render();updateTargetsResult();return}
+  toast('Testing key…');
+  try{await gemini([{text:'Reply with exactly this JSON: {"ok":true}'}]);toast('Key works. Photo estimates are on.')}
+  catch(e){toast(AI_MSG[e?.code]||AI_MSG.failed)}
+}
+
+function pickPhoto(camera){
+  const i=$('#photoIn');if(camera)i.setAttribute('capture','environment');else i.removeAttribute('capture');i.click();
+}
+$('#camBtn').onclick=()=>pickPhoto(true);
+$('#libBtn').onclick=()=>pickPhoto(false);
+function setPhoto(file){
+  if(D?.url)URL.revokeObjectURL(D.url);
+  if(D){D.file=file;D.url=file?URL.createObjectURL(file):null}
+  $('#photoEmpty').hidden=!!file;$('#photoFull').hidden=!file;$('#photoImg').src=file&&D?D.url:'';
+  if(!file)$('#photoIn').value='';
+  updateLookup();
+}
+$('#photoIn').onchange=e=>{const f=e.target.files[0];if(f&&D){setPhoto(f);if(ai.key)estimate()}};
+$('#photoRemove').onclick=()=>{setPhoto(null);pickPhoto(true)};
+
+/* roll the date over if the app stays open past midnight */
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&$('#sheet').hidden){const t=todayKey();if(S.date<t&&S._lastToday&&S._lastToday!==t){S.date=t}S._lastToday=t;render()}});
+
+/* ---------------- boot ---------------- */
+S._lastToday=todayKey();
+render();
+store.init().then(restoreDraft);
+</script>
+</body>
+</html>

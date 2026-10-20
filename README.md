@@ -4,4 +4,4 @@ A single-file, offline-first calorie and protein tracker. Everything lives in `i
 
 Optional photo estimates use Google's Gemini API with your own key, which is stored only in your browser.
 
-Live site: https://pokealimit.github.io/fuel-log/
+Live site: https://pokealimit.github.io/Fuel-Log/

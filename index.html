@@ -328,7 +328,7 @@ function dateLabel(k){
   const t=todayKey();if(k===t)return 'Today';if(k===addDays(t,-1))return 'Yesterday';
   return fromKey(k).toLocaleDateString('en-SG',{weekday:'long'});
 }
-let toastT;function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2800)}
+let toastT;function toast(m,ms=2800){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(toastT);if(ms)toastT=setTimeout(()=>t.hidden=true,ms)}
 function entryCount(){return Object.values(S.days).reduce((n,d)=>n+(d.entries||[]).length,0)}
 function recentMeals(){
   const all=[];for(const d of Object.values(S.days))for(const e of d.entries||[])all.push(e);
@@ -627,32 +627,49 @@ $('#deleteBtn').onclick=()=>{
 };
 
 /* ---------------- photo + Gemini estimate ---------------- */
-const AIK='fuel-log-gemini',AIM='fuel-log-gemini-model';
+const AIK='fuel-log-gemini';
 const ai={
   get key(){try{return localStorage.getItem(AIK)||''}catch(e){return ''}},
   set key(v){try{v?localStorage.setItem(AIK,v):localStorage.removeItem(AIK)}catch(e){}},
-  models(){let m='';try{m=localStorage.getItem(AIM)||''}catch(e){}return [...new Set([m,'gemini-flash-latest','gemini-2.5-flash','gemini-2.0-flash'].filter(Boolean))]}
+  lastModel:''
 };
+// latest first; it gets 25 s (retrying while busy) before we switch. The last model has no time limit.
+const MODELS=[{id:'gemini-flash-latest',label:'Gemini (latest)',budget:25000},{id:'gemini-3.8-flash',label:'Gemini 3.8 Flash'}];
 class AIError extends Error{constructor(code,msg){super(msg||code);this.code=code}}
-async function gemini(parts,signal){
+const sleep=(ms,signal)=>new Promise((res,rej)=>{const t=setTimeout(res,ms);signal?.addEventListener('abort',()=>{clearTimeout(t);rej(new AIError('cancelled'))},{once:true})});
+async function gemini(parts,signal,say=()=>{}){
   const key=ai.key;if(!key)throw new AIError('no_key');
   let last=null;
-  for(const model of ai.models()){
-    let r;
-    try{r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,{method:'POST',signal,
-      headers:{'Content-Type':'application/json','x-goog-api-key':key},
-      body:JSON.stringify({contents:[{role:'user',parts}],generationConfig:{responseMimeType:'application/json',temperature:0.2}})})}
-    catch(e){if(e.name==='AbortError')throw new AIError('cancelled');throw new AIError('network')}
-    const j=await r.json().catch(()=>({}));
-    if(r.status===404){last=new AIError('model');continue}
-    if(!r.ok){const m=j.error?.message||'';
-      if(r.status===429)throw new AIError('rate_limited',m);
-      if((r.status===400&&/api key/i.test(m))||r.status===401||r.status===403)throw new AIError('bad_key',m);
-      throw new AIError('failed',m)}
-    try{localStorage.setItem(AIM,model)}catch(e){}
-    const txt=(j.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('').trim();
-    if(!txt)throw new AIError('refused');
-    try{return JSON.parse(txt.replace(/^```(?:json)?\s*|\s*```$/g,''))}catch(e){throw new AIError('invalid_json')}
+  for(const [i,m] of MODELS.entries()){
+    const deadline=m.budget?Date.now()+m.budget:Infinity;
+    if(!i)say(`Asking ${m.label}`);
+    for(;;){
+      const left=deadline-Date.now();if(left<=0){last=new AIError('busy');break}
+      const t=new AbortController(),stop=()=>t.abort();signal?.addEventListener('abort',stop);
+      const timer=left<Infinity?setTimeout(stop,left):null;
+      const tick=left<Infinity?setInterval(()=>say(`${m.label} is taking a while (switching in ${Math.max(0,Math.ceil((deadline-Date.now())/1000))}s)`),5000):null;
+      let r,j;
+      try{r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m.id}:generateContent`,{method:'POST',signal:t.signal,
+        headers:{'Content-Type':'application/json','x-goog-api-key':key},
+        body:JSON.stringify({contents:[{role:'user',parts}],generationConfig:{responseMimeType:'application/json',temperature:0.2}})});
+        j=await r.json().catch(e=>{if(e.name==='AbortError')throw e;return {}})}
+      catch(e){if(signal?.aborted)throw new AIError('cancelled');if(e.name==='AbortError'){last=new AIError('slow');break}throw new AIError('network')}
+      finally{clearTimeout(timer);clearInterval(tick);signal?.removeEventListener('abort',stop)}
+      if(r.status===404){last=new AIError('model');break}
+      if(r.status===503){last=new AIError('busy');if(deadline===Infinity)break;
+        const s=Math.ceil((deadline-Date.now())/1000);if(s<=0)break;
+        say(`${m.label} is busy, retrying (switching in ${s}s)`);await sleep(Math.min(5000,deadline-Date.now()),signal);continue}
+      if(!r.ok){const msg=j.error?.message||'';
+        if(r.status===429)throw new AIError('rate_limited',msg);
+        if((r.status===400&&/api key/i.test(msg))||r.status===401||r.status===403)throw new AIError('bad_key',msg);
+        throw new AIError('failed',msg)}
+      const txt=(j.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('').trim();
+      if(!txt)throw new AIError('refused');
+      ai.lastModel=m.label;
+      try{return JSON.parse(txt.replace(/^```(?:json)?\s*|\s*```$/g,''))}catch(e){throw new AIError('invalid_json')}
+    }
+    const next=MODELS[i+1];
+    if(next){const why={model:'is unavailable',slow:'is taking too long'}[last?.code]||'is busy';say(`${m.label} ${why}, switching to ${next.label}`,true)}
   }
   throw last||new AIError('failed');
 }
@@ -667,13 +684,15 @@ function toJpegB64(file,max=1280){
 }
 const AI_MSG={no_key:'Add a Gemini key in Targets first.',bad_key:'Google rejected the API key. Check it in Targets.',rate_limited:'Free limit reached for now. Wait a minute (or until tomorrow) and try again, or enter the numbers yourself.',
   network:'No connection to Google. Check your internet and try again.',refused:'Gemini could not estimate this. Try another photo or add a note.',invalid_json:'The estimate came back garbled. Tap Estimate to try again.',
-  image:'That photo could not be read. Try a different one.',model:'No Gemini model is available for this key.',failed:'The estimate failed. Try again in a moment.'};
+  image:'That photo could not be read. Try a different one.',model:'No Gemini model is available for this key.',slow:'Gemini took too long. Try again in a minute, or enter the numbers yourself.',busy:'Gemini is busy right now. Try again in a minute, or enter the numbers yourself.',failed:'The estimate failed. Try again in a moment.'};
 let ctl=null;
 async function estimate(){
   if(!D||D.busy)return;const st=$('#estStatus');
   if(!D.file&&!D.note.trim()){st.className='status err';st.textContent='Add a photo or describe what you ate.';return}
   ctl?.abort();ctl=new AbortController();const my=D;my.busy=true;updateLookup();
-  st.className='status';st.innerHTML=`<span class="dots">${my.file?'Looking at your plate':'Working it out'}</span>`;
+  // keep a running line of what's happening; switches also pop a toast
+  const say=(msg,announce)=>{if(D!==my)return;st.className='status';st.innerHTML=`<span class="dots">${esc(msg)}</span>`;if(announce)toast(msg)};
+  say(my.file?'Preparing your photo':'Working it out');
   const prompt=`You estimate nutrition for a calorie and protein tracker. The user lives in Singapore, so expect hawker, kopitiam and other local dishes as well as Western, Japanese, Korean and other food.
 ${my.file?'Identify each distinct food or drink in the photo and estimate the amount visible.':'Estimate from the description below.'}
 ${my.pax>1?`This is a SHARED meal split across ${my.pax} people. Estimate the WHOLE spread as pictured or described (all plates together, not one person's share). The app divides by ${my.pax}.`:"This is one person's meal."}
@@ -685,12 +704,12 @@ If there is no food or drink, return {"title":"","items":[],"confidence":"low","
   try{
     const parts=[{text:prompt}];
     if(my.file)parts.push({inline_data:{mime_type:'image/jpeg',data:await toJpegB64(my.file)}});
-    const r=await gemini(parts,ctl.signal);
+    const r=await gemini(parts,ctl.signal,say);
     if(D!==my)return;
     const items=Array.isArray(r?.items)?r.items.map(i=>({name:String(i.name||'').slice(0,60),portion:String(i.portion||'').slice(0,40),kcal:Math.max(0,+i.kcal||0),protein:Math.max(0,+(i.protein_g??i.protein)||0)})).filter(i=>i.name):[];
     if(!items.length){st.className='status err';st.textContent=r?.note||'No food found. Try another photo or add a note.';return}
     D.items=items;D.title=String(r.title||items.map(i=>i.name).join(', ')).slice(0,60);D.conf=['low','medium','high'].includes(r.confidence)?r.confidence:null;D.aiNote=String(r.note||'');
-    st.textContent='';renderItems();
+    st.className='status';st.textContent=`Estimated with ${ai.lastModel}`;renderItems();
   }catch(e){
     if(D!==my||e?.code==='cancelled')return;
     st.className='status err';st.textContent=AI_MSG[e?.code]||AI_MSG.failed;
@@ -701,8 +720,8 @@ $('#noteIn').addEventListener('input',updateLookup);
 async function saveKey(){
   const v=$('#aiKey').value.trim();ai.key=v;
   if(!v){toast('Key removed');$('#view').innerHTML='';render();updateTargetsResult();return}
-  toast('Testing key…');
-  try{await gemini([{text:'Reply with exactly this JSON: {"ok":true}'}]);toast('Key works. Photo estimates are on.')}
+  toast('Testing key…',0);
+  try{await gemini([{text:'Reply with exactly this JSON: {"ok":true}'}],null,msg=>toast(msg+'…',0));toast(`Key works (${ai.lastModel}). Photo estimates are on.`)}
   catch(e){toast(AI_MSG[e?.code]||AI_MSG.failed)}
 }
 

@@ -633,21 +633,23 @@ const ai={
   set key(v){try{v?localStorage.setItem(AIK,v):localStorage.removeItem(AIK)}catch(e){}},
   lastModel:''
 };
-// latest first; it gets 25 s (retrying while busy) before we switch. The last model has no time limit.
-const MODELS=[{id:'gemini-flash-latest',label:'Gemini (latest)',budget:25000},{id:'gemini-3.8-flash',label:'Gemini 3.8 Flash'}];
+// tried in order; each gets its own time limit (retrying while busy), newer models get longer.
+// A model that is busy, too slow, retired or out of free quota hands over to the next one.
+const MODELS=[{id:'gemini-flash-latest',label:'Gemini (latest)',budget:90000},{id:'gemini-3.8-flash',label:'Gemini 3.8 Flash',budget:60000},
+  {id:'gemini-3.7-flash',label:'Gemini 3.7 Flash',budget:45000},{id:'gemini-3.6-flash',label:'Gemini 3.6 Flash',budget:30000},{id:'gemini-3.5-flash',label:'Gemini 3.5 Flash',budget:20000}];
 class AIError extends Error{constructor(code,msg){super(msg||code);this.code=code}}
 const sleep=(ms,signal)=>new Promise((res,rej)=>{const t=setTimeout(res,ms);signal?.addEventListener('abort',()=>{clearTimeout(t);rej(new AIError('cancelled'))},{once:true})});
 async function gemini(parts,signal,say=()=>{}){
   const key=ai.key;if(!key)throw new AIError('no_key');
   let last=null;
   for(const [i,m] of MODELS.entries()){
-    const deadline=m.budget?Date.now()+m.budget:Infinity;
+    const deadline=m.budget?Date.now()+m.budget:Infinity,after=MODELS[i+1]?'switching':'giving up';
     if(!i)say(`Asking ${m.label}`);
     for(;;){
       const left=deadline-Date.now();if(left<=0){last=new AIError('busy');break}
       const t=new AbortController(),stop=()=>t.abort();signal?.addEventListener('abort',stop);
       const timer=left<Infinity?setTimeout(stop,left):null;
-      const tick=left<Infinity?setInterval(()=>say(`${m.label} is taking a while (switching in ${Math.max(0,Math.ceil((deadline-Date.now())/1000))}s)`),5000):null;
+      const tick=left<Infinity?setInterval(()=>say(`${m.label} is taking a while (${after} in ${Math.max(0,Math.ceil((deadline-Date.now())/1000))}s)`),5000):null;
       let r,j;
       try{r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m.id}:generateContent`,{method:'POST',signal:t.signal,
         headers:{'Content-Type':'application/json','x-goog-api-key':key},
@@ -658,9 +660,9 @@ async function gemini(parts,signal,say=()=>{}){
       if(r.status===404){last=new AIError('model');break}
       if(r.status===503){last=new AIError('busy');if(deadline===Infinity)break;
         const s=Math.ceil((deadline-Date.now())/1000);if(s<=0)break;
-        say(`${m.label} is busy, retrying (switching in ${s}s)`);await sleep(Math.min(5000,deadline-Date.now()),signal);continue}
+        say(`${m.label} is busy, retrying (${after} in ${s}s)`);await sleep(Math.min(5000,deadline-Date.now()),signal);continue}
       if(!r.ok){const msg=j.error?.message||'';
-        if(r.status===429)throw new AIError('rate_limited',msg);
+        if(r.status===429){last=new AIError('rate_limited',msg);break}
         if((r.status===400&&/api key/i.test(msg))||r.status===401||r.status===403)throw new AIError('bad_key',msg);
         throw new AIError('failed',msg)}
       const txt=(j.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('').trim();
@@ -669,7 +671,7 @@ async function gemini(parts,signal,say=()=>{}){
       try{return JSON.parse(txt.replace(/^```(?:json)?\s*|\s*```$/g,''))}catch(e){throw new AIError('invalid_json')}
     }
     const next=MODELS[i+1];
-    if(next){const why={model:'is unavailable',slow:'is taking too long'}[last?.code]||'is busy';say(`${m.label} ${why}, switching to ${next.label}`,true)}
+    if(next){const why={model:'is unavailable',slow:'is taking too long',rate_limited:'has hit its free limit'}[last?.code]||'is busy';say(`${m.label} ${why}, switching to ${next.label}`,true)}
   }
   throw last||new AIError('failed');
 }
@@ -682,7 +684,7 @@ function toJpegB64(file,max=1280){
     img.onerror=()=>{URL.revokeObjectURL(url);rej(new AIError('image'))};img.src=url;
   });
 }
-const AI_MSG={no_key:'Add a Gemini key in Targets first.',bad_key:'Google rejected the API key. Check it in Targets.',rate_limited:'Free limit reached for now. Wait a minute (or until tomorrow) and try again, or enter the numbers yourself.',
+const AI_MSG={no_key:'Add a Gemini key in Targets first.',bad_key:'Google rejected the API key. Check it in Targets.',rate_limited:'Free limit reached on every Gemini model. Try again tomorrow, or enter the numbers yourself.',
   network:'No connection to Google. Check your internet and try again.',refused:'Gemini could not estimate this. Try another photo or add a note.',invalid_json:'The estimate came back garbled. Tap Estimate to try again.',
   image:'That photo could not be read. Try a different one.',model:'No Gemini model is available for this key.',slow:'Gemini took too long. Try again in a minute, or enter the numbers yourself.',busy:'Gemini is busy right now. Try again in a minute, or enter the numbers yourself.',failed:'The estimate failed. Try again in a moment.'};
 let ctl=null;

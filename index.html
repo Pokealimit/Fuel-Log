@@ -149,6 +149,31 @@ h2.h{margin:0;font:700 24px/1.1 var(--display);letter-spacing:-.3px}
 .recent::-webkit-scrollbar{display:none}
 .recent .chip{flex:none;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
 .recent .chip b{font-weight:600}
+.recent .chip.fav b::before{content:"★ ";color:var(--kcal)}
+.qsearch{position:relative}
+.qsearch svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--muted);pointer-events:none}
+.qsearch input{padding-left:38px;padding-right:40px}
+.qsearch input::-webkit-search-cancel-button{-webkit-appearance:none;appearance:none}
+.qsearch button{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--muted);width:34px;height:34px;font-size:15px}
+.qrows{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.qrow{display:flex;gap:10px;align-items:center;border:0;border-top:1px solid var(--line);background:none;padding:10px 12px;text-align:left;width:100%}
+.qrow:first-child{border-top:0}
+.qrow:active{background:var(--surface2)}
+.qrow .main{flex:1;min-width:0}
+.qrow .nm{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qrow .nm .star{color:var(--kcal)}
+.qrow .sub{font-size:12.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qrow .vals{text-align:right;flex:none;font-size:13px;line-height:1.35}
+.qrow .k{color:var(--kcal);font-weight:600} .qrow .p{color:var(--protein);font-weight:600}
+.qempty{font-size:13px;color:var(--muted);margin:0}
+.favbtn{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;font-weight:600;font-size:13px;color:var(--muted);align-self:flex-start;min-height:34px}
+.favbtn.on{color:var(--kcal);border-color:color-mix(in srgb,var(--kcal) 45%,var(--line));background:var(--kcal-soft)}
+.favlist .row{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.favlist .row:first-child{border-top:0}
+.favlist .main{flex:1;min-width:0}
+.favlist .nm{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.favlist .sub{font-size:12.5px;color:var(--muted)}
+.favlist .del{border:1px solid var(--line);background:none;border-radius:10px;padding:6px 10px;font-size:13px;font-weight:600;color:var(--over);flex:none}
 .result{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .result .big{font:700 30px/1 var(--display);font-variant-numeric:tabular-nums}
 .result .k{color:var(--kcal)} .result .p{color:var(--protein)}
@@ -238,9 +263,9 @@ textarea{resize:none;line-height:1.4}
   <div class="grab"></div>
   <header class="sheet-head"><h2 id="sheetTitle">Log a meal</h2><button id="sheetClose" class="icon-btn" aria-label="Close">✕</button></header>
   <div class="sheet-body">
-    <div id="recentBlock" hidden>
-      <div class="field-label" style="margin-bottom:6px">Recent</div>
-      <div class="recent" id="recentList"></div>
+    <div id="quickBlock" hidden>
+      <div class="qsearch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5"/></svg><input id="quickQ" class="inp" type="search" placeholder="Search favourites &amp; past meals" aria-label="Search favourites and past meals" autocomplete="off" enterkeyhint="search"><button type="button" id="quickClear" aria-label="Clear search" hidden>✕</button></div>
+      <div id="quickList" style="margin-top:10px"></div>
     </div>
     <input type="file" id="photoIn" accept="image/*" hidden>
     <div id="photoEmpty" class="photo-pick">
@@ -260,6 +285,7 @@ textarea{resize:none;line-height:1.4}
     <div class="pax"><button id="paxMinus" type="button" aria-label="Fewer people">−</button><output id="paxOut" class="num">1</output><button id="paxPlus" type="button" aria-label="More people">+</button><span id="paxHint">Just me</span></div>
     <div id="resultBlock">
       <div class="result-head"><input id="titleIn" class="inp" placeholder="Meal name (optional)" aria-label="Meal name"><span id="confChip" class="conf" hidden></span></div>
+      <button type="button" id="favBtn" class="favbtn" aria-pressed="false">☆ Add to favourites</button>
       <p id="aiNote" class="fine" hidden></p>
       <div class="fine" id="itemsCap">Check the numbers and edit anything that looks off.</div>
       <div id="itemsList"></div>
@@ -292,7 +318,7 @@ function gQuery(text){return `${text.trim()} calories protein`}
 function gImg(text){return 'https://www.google.com/search?tbm=isch&q='+encodeURIComponent(gQuery(text))}
 function gWeb(text){return 'https://www.google.com/search?q='+encodeURIComponent(gQuery(text))}
 
-const S={days:{},profile:null,settings:{},tab:'today',date:todayKey(),range:7,persisted:null,lastBackup:0};
+const S={days:{},profile:null,settings:{},favs:[],tab:'today',date:todayKey(),range:7,persisted:null,lastBackup:0};
 
 /* ---------------- storage: localStorage + IndexedDB mirror ---------------- */
 const LS='fuel-log-v1',DRAFT='fuel-log-draft';
@@ -303,8 +329,8 @@ const idb={
   set(k,v){if(!this.db)return;try{this.db.transaction('kv','readwrite').objectStore('kv').put(v,k)}catch(e){}}
 };
 const store={
-  snapshot(){return {v:2,days:S.days,profile:S.profile,settings:S.settings,lastBackup:S.lastBackup,saved:Date.now()}},
-  load(raw){if(!raw||typeof raw!=='object')return false;S.days=raw.days&&typeof raw.days==='object'?raw.days:{};S.profile=raw.profile||null;S.lastBackup=raw.lastBackup||0;if(raw.settings&&typeof raw.settings==='object')S.settings=raw.settings;return true},
+  snapshot(){return {v:2,days:S.days,profile:S.profile,settings:S.settings,favs:S.favs,lastBackup:S.lastBackup,saved:Date.now()}},
+  load(raw){if(!raw||typeof raw!=='object')return false;S.days=raw.days&&typeof raw.days==='object'?raw.days:{};S.profile=raw.profile||null;S.lastBackup=raw.lastBackup||0;if(raw.settings&&typeof raw.settings==='object')S.settings=raw.settings;if(Array.isArray(raw.favs))S.favs=raw.favs;return true},
   async init(){
     let ls=null;try{ls=JSON.parse(localStorage.getItem(LS)||'null')}catch(e){}
     await idb.open();const ib=await idb.get(LS);
@@ -359,12 +385,6 @@ function dateLabel(k){
 }
 let toastT;function toast(m,ms=2800){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(toastT);if(ms)toastT=setTimeout(()=>t.hidden=true,ms)}
 function entryCount(){return Object.values(S.days).reduce((n,d)=>n+(d.entries||[]).length,0)}
-function recentMeals(){
-  const all=[];for(const d of Object.values(S.days))for(const e of d.entries||[])all.push(e);
-  all.sort((a,b)=>b.ts-a.ts);const seen=new Set(),out=[];
-  for(const e of all){const k=(e.name||'').toLowerCase().trim();if(!k||seen.has(k))continue;seen.add(k);out.push(e);if(out.length>=10)break}
-  return out;
-}
 
 /* ---------------- views ---------------- */
 function render(){
@@ -506,6 +526,7 @@ function viewTargets(){
       <label class="switch"><span>Enable carbs and fats</span><input type="checkbox" id="macrosIn" ${macrosOn()?'checked':''}></label>
       <p class="cap" style="margin:6px 0 0">Also estimate and track carbs and fat. Meals logged before you turn this on keep calories and protein only until you edit them.</p>
     </div>
+    <div class="card" id="favCard">${favCard()}</div>
     <div class="card" id="aiCard">
       <h3>Photo estimates</h3>
       <p class="cap">Uses Google's free Gemini API to read your photo. ${ai.key?'A key is saved on this phone.':'Paste a free key to turn it on.'}</p>
@@ -520,6 +541,11 @@ function viewTargets(){
       <p class="fine" style="margin-top:8px">Export saves a .json file you can keep in Files or iCloud Drive. Import replaces what is on this phone with the file's contents.</p>
     </div>
   </div>`;
+}
+function favCard(){
+  const list=[...S.favs].sort((a,b)=>a.name.localeCompare(b.name));
+  return `<h3>Favourite meals</h3><p class="cap">${list.length?`${list.length} saved. They show at the top when you log a meal.`:'None yet. When logging a meal, tap ☆ Add to favourites to keep it for next time.'}</p>
+   ${list.length?`<div class="favlist">${list.map(f=>`<div class="row"><div class="main"><div class="nm">${esc(f.name)}</div><div class="sub num">${fmt(f.kcal)} kcal · ${fmt(f.protein)} g protein${f.pax>1?` · your share of ${f.pax}`:''}${f.uses?` · used ${f.uses}×`:''}</div></div><button type="button" class="del" data-favdel="${f.id}">Remove</button></div>`).join('')}</div>`:''}`;
 }
 function readTargetsForm(){
   const g=n=>document.querySelector(`[data-group="${n}"] .chip.on`)?.dataset.v;
@@ -568,6 +594,8 @@ document.addEventListener('click',e=>{
   if(t.dataset.range){S.range=+t.dataset.range;render();return}
   if(t.hasAttribute('data-aisave')){saveKey();return}
   if(t.hasAttribute('data-theme-toggle')){toggleTheme();return}
+  if(t.dataset.favdel){if(!t.dataset.arm){t.dataset.arm='1';t.textContent='Tap to confirm';return}
+    S.favs=S.favs.filter(f=>f.id!==t.dataset.favdel);store.save();$('#favCard').innerHTML=favCard();toast('Removed from favourites');return}
   if(t.hasAttribute('data-export')){exportBackup();return}
   if(t.hasAttribute('data-import')){$('#importIn').click();return}
   if(t.hasAttribute('data-snap')){openSheet({meal:mealByTime()});pickPhoto(true);return}
@@ -600,7 +628,7 @@ function openSheet({meal,entry,draft}){
   $('#noteIn').value=D.note;
   $('#deleteBtn').hidden=!D.edit;$('#deleteBtn').textContent='Delete';delete $('#deleteBtn').dataset.arm;
   setPhoto(null);D.conf=D.conf||null;D.aiNote='';$('#estStatus').textContent='';$('#estStatus').className='status';
-  renderRecent();renderChips();renderPax();renderItems();updateLookup();
+  $('#quickQ').value='';renderQuick();renderChips();renderPax();renderItems();updateLookup();
   $('#scrim').hidden=false;$('#sheet').hidden=false;
 }
 function closeSheet(){setPhoto(null);D=null;clearDraft();$('#sheet').hidden=true;$('#scrim').hidden=true}
@@ -616,17 +644,77 @@ function restoreDraft(){
 document.addEventListener('visibilitychange',()=>{if(document.hidden)saveDraft()});
 window.addEventListener('pagehide',saveDraft);
 
-function renderRecent(){
-  const list=D.edit?[]:recentMeals();$('#recentBlock').hidden=!list.length;
-  $('#recentList').innerHTML=list.map(e=>`<button type="button" class="chip" data-recent="${e.id}"><b>${esc(e.name)}</b> · ${fmt(e.kcal)} kcal</button>`).join('');
+/* ---------------- favourites + search ---------------- */
+const norm=s=>String(s||'').toLowerCase().trim();
+const favByName=n=>S.favs.find(f=>norm(f.name)===norm(n));
+function pastMeals(){
+  // every logged meal, newest first, one per name
+  const all=[];for(const d of Object.values(S.days))for(const e of d.entries||[])all.push(e);
+  all.sort((a,b)=>b.ts-a.ts);const seen=new Set(),out=[];
+  for(const e of all){const k=norm(e.name);if(!k||seen.has(k))continue;seen.add(k);out.push(e)}
+  return out;
 }
-$('#recentList').addEventListener('click',e=>{
-  const b=e.target.closest('[data-recent]');if(!b)return;
-  let src=null;for(const d of Object.values(S.days)){src=(d.entries||[]).find(x=>x.id===b.dataset.recent);if(src)break}
+function favsSorted(){return [...S.favs].sort((a,b)=>(b.uses||0)-(a.uses||0)||(b.lastUsed||0)-(a.lastUsed||0))}
+function matches(m,q){const hay=norm([m.name,...(m.items||[]).map(i=>i.name)].join(' '));return q.split(/\s+/).every(w=>hay.includes(w))}
+function renderQuick(){
+  const has=S.favs.length||entryCount();$('#quickBlock').hidden=!!D.edit||!has;if($('#quickBlock').hidden)return;
+  const q=norm($('#quickQ').value);$('#quickClear').hidden=!q;
+  const favs=favsSorted(),past=pastMeals().filter(e=>!favByName(e.name));
+  if(!q){
+    $('#quickList').innerHTML=`<div class="field-label" style="margin-bottom:6px">★ Favourites</div>
+      ${favs.length?`<div class="recent">${favs.map(f=>`<button type="button" class="chip fav" data-fav="${f.id}"><b>${esc(f.name)}</b> · ${fmt(f.kcal)} kcal</button>`).join('')}</div>`
+        :'<p class="qempty">Nothing saved yet. Tap ☆ Add to favourites below when you log a meal you eat often.</p>'}
+      ${past.length?`<div class="field-label" style="margin:12px 0 6px">Recent</div><div class="recent">${past.slice(0,10).map(e=>`<button type="button" class="chip" data-past="${e.id}"><b>${esc(e.name)}</b> · ${fmt(e.kcal)} kcal</button>`).join('')}</div>`:''}`;
+    return;
+  }
+  const row=(m,attr,fav,when)=>`<button type="button" class="qrow" ${attr}><div class="main"><div class="nm">${fav?'<span class="star">★</span> ':''}${esc(m.name)}</div>
+    <div class="sub">${esc([m.pax>1?`your share of ${m.pax}`:'',when,(m.items||[]).map(i=>i.name).filter(Boolean).join(' · ')].filter(Boolean).join(' · '))}</div></div>
+    <div class="vals num"><div class="k">${fmt(m.kcal)} kcal</div><div class="p">${fmt(m.protein)} g</div></div></button>`;
+  const fr=favs.filter(f=>matches(f,q)),pr=past.filter(e=>matches(e,q)).slice(0,Math.max(0,12-fr.length));
+  const day=ts=>ts?new Date(ts).toLocaleDateString('en-SG',{day:'numeric',month:'short'}):'';
+  $('#quickList').innerHTML=fr.length||pr.length?`<div class="qrows">${fr.map(f=>row(f,`data-fav="${f.id}"`,true,f.uses?`used ${f.uses}×`:'')).join('')}${pr.map(e=>row(e,`data-past="${e.id}"`,false,'last '+day(e.ts))).join('')}</div>`
+    :`<p class="qempty">No favourites or past meals match “${esc($('#quickQ').value.trim())}”.</p>`;
+}
+$('#quickQ').addEventListener('input',renderQuick);
+$('#quickClear').onclick=()=>{$('#quickQ').value='';renderQuick();$('#quickQ').focus()};
+function fillFrom(src){
+  D.title=src.name;D.pax=src.pax||1;D.conf=null;D.aiNote='';
+  D.items=(src.items||[]).map(i=>({...blankItem(),...i}));
+  if(!D.items.length)D.items=[{name:src.name,portion:'',kcal:src.kcal*D.pax,protein:src.protein*D.pax,carbs:src.carbs!=null?src.carbs*D.pax:'',fat:src.fat!=null?src.fat*D.pax:''}];
+  renderPax();renderItems();
+}
+$('#quickList').addEventListener('click',e=>{
+  const b=e.target.closest('[data-fav],[data-past]');if(!b)return;
+  let src=null;
+  if(b.dataset.fav)src=S.favs.find(f=>f.id===b.dataset.fav);
+  else for(const d of Object.values(S.days)){src=(d.entries||[]).find(x=>x.id===b.dataset.past);if(src)break}
   if(!src)return;
-  D.title=src.name;D.pax=src.pax||1;D.items=(src.items||[]).map(i=>({...i}));if(!D.items.length)D.items=[{name:src.name,portion:'',kcal:src.kcal*D.pax,protein:src.protein*D.pax,carbs:src.carbs!=null?src.carbs*D.pax:'',fat:src.fat!=null?src.fat*D.pax:''}];
-  renderPax();renderItems();toast('Filled from '+src.name);
+  fillFrom(src);$('#quickQ').value='';renderQuick();
+  $('#resultBlock').scrollIntoView({behavior:'smooth',block:'start'});toast(`Filled from ${src.name}. Check it and tap Save.`);
 });
+// the meal as it stands in the form, in the shape we store
+const r1=v=>Math.round((+v||0)*10)/10;
+function formMeal(){
+  const t=totals();
+  const items=D.items.filter(i=>i.name||+i.kcal||+i.protein||+i.carbs||+i.fat).map(i=>({name:(i.name||'').trim(),portion:i.portion||'',kcal:Math.round(+i.kcal||0),protein:r1(i.protein),...(known(i.carbs)?{carbs:r1(i.carbs)}:{}),...(known(i.fat)?{fat:r1(i.fat)}:{})}));
+  const name=(D.title.trim()||items.map(i=>i.name).filter(Boolean).join(', ')||D.note.trim()||MEALS.find(m=>m.id===D.meal).label).slice(0,60);
+  return {name,items,pax:D.pax,kcal:Math.round(t.kcal/D.pax),protein:r1(t.protein/D.pax),...(t.hasC?{carbs:r1(t.carbs/D.pax)}:{}),...(t.hasF?{fat:r1(t.fat/D.pax)}:{})};
+}
+const sameMeal=(a,b)=>JSON.stringify([a.pax,a.items])===JSON.stringify([b.pax,b.items]);
+function updateFavBtn(){
+  if(!D)return;const b=$('#favBtn'),t=totals(),m=formMeal(),f=favByName(m.name);
+  b.hidden=!(t.kcal>0||t.protein>0);
+  const state=!f?'add':sameMeal(f,m)?'saved':'update';
+  b.dataset.state=state;b.classList.toggle('on',state!=='add');b.setAttribute('aria-pressed',state!=='add');
+  b.textContent=state==='add'?'☆ Add to favourites':state==='saved'?'★ In favourites (tap to remove)':'★ Update favourite with these numbers';
+}
+$('#favBtn').onclick=()=>{
+  const m=formMeal(),f=favByName(m.name),state=$('#favBtn').dataset.state;
+  if(state==='saved'){S.favs=S.favs.filter(x=>x!==f);toast('Removed from favourites')}
+  else if(state==='update'){Object.assign(f,m,{updated:Date.now()});toast('Favourite updated')}
+  else{S.favs=[...S.favs,{id:uid(),...m,uses:0,created:Date.now()}];toast(`★ ${m.name} saved to favourites`)}
+  store.save();updateFavBtn();
+};
 function renderChips(){
   $('#mealChips').innerHTML=MEALS.map(m=>`<button type="button" class="chip ${D.meal===m.id?'on':''}" data-meal="${m.id}">${m.label}</button>`).join('');
 }
@@ -681,15 +769,13 @@ function updateTotals(){
    ${D.pax>1?`<div class="w num">Whole dish: ${fmt(t.kcal)} kcal · ${fmt(t.protein)} g protein${macrosOn()&&t.hasC?` · ${fmt(t.carbs)} g carbs`:''}${macrosOn()&&t.hasF?` · ${fmt(t.fat)} g fat`:''}</div>`:''}`;
   updateSave();
 }
-function updateSave(){const t=D?totals():{kcal:0,protein:0};$('#saveBtn').disabled=!D||!(t.kcal>0||t.protein>0);$('#saveBtn').textContent=D?`Save to ${MEALS.find(m=>m.id===D.meal).label}`:'Save'}
+function updateSave(){updateFavBtn();const t=D?totals():{kcal:0,protein:0};$('#saveBtn').disabled=!D||!(t.kcal>0||t.protein>0);$('#saveBtn').textContent=D?`Save to ${MEALS.find(m=>m.id===D.meal).label}`:'Save'}
 
 $('#saveBtn').onclick=()=>{
-  const t=totals();const r1=v=>Math.round((+v||0)*10)/10;
-  const items=D.items.filter(i=>i.name||+i.kcal||+i.protein||+i.carbs||+i.fat).map(i=>({name:(i.name||'').trim(),portion:i.portion||'',kcal:Math.round(+i.kcal||0),protein:r1(i.protein),...(known(i.carbs)?{carbs:r1(i.carbs)}:{}),...(known(i.fat)?{fat:r1(i.fat)}:{})}));
-  const name=(D.title.trim()||items.map(i=>i.name).filter(Boolean).join(', ')||D.note.trim()||MEALS.find(m=>m.id===D.meal).label).slice(0,60);
+  const m=formMeal();
   const old=S.days[D.date]?.entries||[];
-  const e={id:D.edit||uid(),meal:D.meal,name,items,pax:D.pax,note:D.note.trim().slice(0,300),
-    kcal:Math.round(t.kcal/D.pax),protein:r1(t.protein/D.pax),...(t.hasC?{carbs:r1(t.carbs/D.pax)}:{}),...(t.hasF?{fat:r1(t.fat/D.pax)}:{}),ts:D.edit?(old.find(x=>x.id===D.edit)?.ts||Date.now()):Date.now()};
+  const e={id:D.edit||uid(),meal:D.meal,...m,note:D.note.trim().slice(0,300),ts:D.edit?(old.find(x=>x.id===D.edit)?.ts||Date.now()):Date.now()};
+  const f=!D.edit&&favByName(m.name);if(f){f.uses=(f.uses||0)+1;f.lastUsed=Date.now()}
   const entries=D.edit?old.map(x=>x.id===D.edit?e:x):[...old,e];
   S.days={...S.days,[D.date]:{kind:'day',date:D.date,entries}};saveDay();
   const label=MEALS.find(m=>m.id===e.meal).label,wasEdit=!!D.edit;closeSheet();render();toast(wasEdit?'Updated':`Added to ${label}`);

@@ -109,7 +109,8 @@ Backups include your meals, targets, favourites and settings. They don't include
 
 | Message | What to do |
 |---|---|
-| *This model is busy right now* / *took too long* | Google's servers are overloaded. Pick a different **Model** and tap **Re-estimate**, or try again in a minute. |
+| *Taking longer than usual* | The estimate is still running, and the timer shows how long it's been. Keep waiting, or pick another **Model** and tap **Try … instead** to switch. |
+| *This model is busy right now* | Google's servers are overloaded. Pick a different **Model** and tap **Re-estimate**, or try again in a minute. |
 | *This model has used up its free daily limit* | Pick a different **Model**; each has its own daily limit. The Flash-Lite models have the highest limits. Or try again tomorrow. |
 | *This model is not available for your key* | Google has retired that model. Pick another one. |
 | *Google rejected the API key* | Check the key in **Targets → Photo estimates**, or create a new one in Google AI Studio. |

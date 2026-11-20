@@ -40,7 +40,7 @@ Photo estimates use a free Google Gemini API key. You only need to do this once.
 
 The test uses Google's cheapest model, so it's quick and doesn't use up the free replies you need for meals. The key is only stored on your phone and is never included in backups.
 
-> **Free tier limits:** Google limits how many estimates each model gives you per day for free (around 20 at the time of writing). If one model runs out or is busy, pick another in the **Model** menu when logging a meal. On the free tier, Google may use your photos and notes to improve its products.
+> **Free tier limits:** Google limits how many free estimates each model gives you per day. Fuel Log starts on **Gemini 3.5 Flash-Lite**. It and **3.1 Flash-Lite** allow far more free estimates per day (around 500 each at the time of writing) than the Flash models (around 20 each). If one model runs out or is busy, pick another in the **Model** menu when logging a meal. On the free tier, Google may use your photos and notes to improve its products.
 
 You can skip this step and type the numbers in yourself.
 
@@ -67,7 +67,7 @@ Other things you can do on that screen:
 
 - **Shared meal?** Set how many people shared the dish. Enter the whole dish, and Fuel Log logs your share.
 - **🔍 next to an item** looks it up on Google if you want to double-check.
-- **Model** chooses which Gemini model to use. Your choice is remembered.
+- **Model** chooses which Gemini model to use. Your choice is remembered. The two **Flash-Lite** models at the top allow far more free estimates per day. The **Flash** models below them (3.6, 3.8 and latest) may be more accurate on a tricky plate, but you only get a few free estimates a day from each.
 
 ### Favourites: log your usual meals in one tap
 
@@ -110,7 +110,7 @@ Backups include your meals, targets, favourites and settings. They don't include
 | Message | What to do |
 |---|---|
 | *This model is busy right now* / *took too long* | Google's servers are overloaded. Pick a different **Model** and tap **Re-estimate**, or try again in a minute. |
-| *This model has used up its free daily limit* | Pick a different **Model**. Each model has its own daily limit. Or try again tomorrow. |
+| *This model has used up its free daily limit* | Pick a different **Model**; each has its own daily limit. The Flash-Lite models have the highest limits. Or try again tomorrow. |
 | *This model is not available for your key* | Google has retired that model. Pick another one. |
 | *Google rejected the API key* | Check the key in **Targets → Photo estimates**, or create a new one in Google AI Studio. |
 | My log is empty | Make sure you opened it the same way as before (the home-screen icon, not a browser tab). If the data is gone, use **Import backup**. |

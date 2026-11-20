@@ -276,7 +276,8 @@ textarea{resize:none;line-height:1.4}
     <label class="field-label" for="noteIn">Note <span style="font-weight:500">(optional with a photo)</span></label>
     <textarea id="noteIn" rows="2" placeholder="e.g. chicken rice, extra egg, ate half the rice"></textarea>
     <div id="noKey" class="banner" hidden>Estimates need a free Gemini key. <button class="link" type="button" data-go="targets" data-scroll="aiCard">Add one in Targets</button>. Until then, enter the numbers below.</div>
-    <div class="modelrow" id="modelRow"><label class="field-label" for="modelSel">Model</label><select id="modelSel" class="inp"></select></div>
+    <div id="modelRow"><div class="modelrow"><label class="field-label" for="modelSel">Model</label><select id="modelSel" class="inp"></select></div>
+      <p class="fine" style="margin-top:6px">The two Flash-Lite models allow far more free estimates per day than the Flash models. Try a Flash model if an estimate looks off.</p></div>
     <button id="estimateBtn" class="btn primary wide" type="button">Estimate with Gemini</button>
     <p id="estStatus" class="status"></p>
     <div class="field-label">Meal</div>
@@ -628,15 +629,15 @@ function openSheet({meal,entry,draft}){
   $('#noteIn').value=D.note;
   $('#deleteBtn').hidden=!D.edit;$('#deleteBtn').textContent='Delete';delete $('#deleteBtn').dataset.arm;
   setPhoto(null);D.conf=D.conf||null;D.aiNote='';$('#estStatus').textContent='';$('#estStatus').className='status';
-  $('#quickQ').value='';renderQuick();renderChips();renderPax();renderItems();updateLookup();
+  $('#quickQ').value='';$('#modelSel').value=chosenModel().id;renderQuick();renderChips();renderPax();renderItems();updateLookup();
   $('#scrim').hidden=false;$('#sheet').hidden=false;
 }
-function closeSheet(){setPhoto(null);D=null;clearDraft();$('#sheet').hidden=true;$('#scrim').hidden=true}
+function closeSheet(){ctl?.abort();setPhoto(null);D=null;clearDraft();$('#sheet').hidden=true;$('#scrim').hidden=true}
 $('#sheetClose').onclick=closeSheet;$('#scrim').onclick=closeSheet;
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#sheet').hidden)closeSheet()});
 
 /* keep the draft if iOS reloads the app while you're in Google */
-function saveDraft(){if(D)try{const {file,url,busy,...rest}=D;localStorage.setItem(DRAFT,JSON.stringify({...rest,at:Date.now()}))}catch(e){}}
+function saveDraft(){if(D)try{const {file,url,busy,slow,...rest}=D;localStorage.setItem(DRAFT,JSON.stringify({...rest,at:Date.now()}))}catch(e){}}
 function clearDraft(){try{localStorage.removeItem(DRAFT)}catch(e){}}
 function restoreDraft(){
   try{const d=JSON.parse(localStorage.getItem(DRAFT)||'null');if(d&&Date.now()-d.at<3*3600e3){delete d.at;openSheet({draft:d});toast('Picked up where you left off')}else clearDraft()}catch(e){}
@@ -730,7 +731,11 @@ $('#noteIn').addEventListener('input',e=>{
   updateLookup();
 });
 function setLink(a,href){if(href){a.href=href;a.classList.remove('disabled')}else{a.removeAttribute('href');a.classList.add('disabled')}}
-function updateLookup(){if(!D)return;const k=!!ai.key;$('#noKey').hidden=k;$('#estimateBtn').hidden=!k;$('#modelRow').hidden=!k;$('#modelSel').disabled=!!D.busy;const b=$('#estimateBtn');b.disabled=!(D.file||D.note.trim())||!!D.busy;b.textContent=D.conf?'Re-estimate':'Estimate with Gemini'}
+function updateLookup(){if(!D)return;const k=!!ai.key;$('#noKey').hidden=k;$('#estimateBtn').hidden=!k;$('#modelRow').hidden=!k;
+  const b=$('#estimateBtn'),sel=$('#modelSel');sel.disabled=!!D.busy&&!D.slow;
+  if(D.busy&&D.slow){const pick=MODELS.find(m=>m.id===sel.value);const same=!pick||pick.id===D.slow.id;
+    b.disabled=same;b.textContent=same?`Waiting on ${D.slow.label}…`:`Try ${pick.label} instead`;return}
+  b.disabled=!(D.file||D.note.trim())||!!D.busy;b.textContent=D.busy?'Estimating…':D.conf?'Re-estimate':'Estimate with Gemini'}
 
 const gval=v=>v===''||v==null?'':Math.round(v*10)/10;
 const known=v=>v!==''&&v!=null;
@@ -794,29 +799,38 @@ const ai={
   set key(v){try{v?localStorage.setItem(AIK,v):localStorage.removeItem(AIK)}catch(e){}},
   lastModel:''
 };
-// models you can pick for estimates; each gets its own time limit (retrying while busy), newer models get longer
-const MODELS=[{id:'gemini-flash-latest',label:'Gemini (latest)',budget:90000},{id:'gemini-3.8-flash',label:'Gemini 3.8 Flash',budget:60000},
-  {id:'gemini-3.7-flash',label:'Gemini 3.7 Flash',budget:45000},{id:'gemini-3.6-flash',label:'Gemini 3.6 Flash',budget:30000},{id:'gemini-3.5-flash',label:'Gemini 3.5 Flash',budget:20000}];
+// models you can pick for estimates, first is the default. Flash-Lite has a much higher free daily limit.
+// Each gets its own time limit (retrying while busy); the bigger Flash models get longer.
+const MODELS=[{id:'gemini-3.5-flash-lite',label:'Gemini 3.5 Flash-Lite',lite:true,budget:30000},{id:'gemini-3.1-flash-lite',label:'Gemini 3.1 Flash-Lite',lite:true,budget:30000},
+  {id:'gemini-3.6-flash',label:'Gemini 3.6 Flash',budget:30000},{id:'gemini-3.8-flash',label:'Gemini 3.8 Flash',budget:60000},{id:'gemini-flash-latest',label:'Gemini (latest)',budget:90000}];
 // the key test uses the cheapest lite models (their free quota is separate), falling through if one is retired
 const TEST_MODELS=[{id:'gemini-3.1-flash-lite',label:'Gemini 3.1 Flash-Lite',budget:20000},{id:'gemini-3.5-flash-lite',label:'Gemini 3.5 Flash-Lite',budget:20000},{id:'gemini-flash-lite-latest',label:'Gemini Flash-Lite (latest)',budget:20000}];
 const AISEL='fuel-log-gemini-model';
 function chosenModel(){let id='';try{id=localStorage.getItem(AISEL)||''}catch(e){}return MODELS.find(m=>m.id===id)||MODELS[0]}
-$('#modelSel').innerHTML=MODELS.map(m=>`<option value="${m.id}">${m.label}</option>`).join('');
+const opt=m=>`<option value="${m.id}">${m.label}</option>`;
+$('#modelSel').innerHTML=`<optgroup label="Higher free limit">${MODELS.filter(m=>m.lite).map(opt).join('')}</optgroup><optgroup label="Lower free limit">${MODELS.filter(m=>!m.lite).map(opt).join('')}</optgroup>`;
 $('#modelSel').value=chosenModel().id;
-$('#modelSel').onchange=e=>{try{localStorage.setItem(AISEL,e.target.value)}catch(err){}};
+$('#modelSel').onchange=e=>{try{localStorage.setItem(AISEL,e.target.value)}catch(err){}updateLookup()};
 class AIError extends Error{constructor(code,msg){super(msg||code);this.code=code}}
 const sleep=(ms,signal)=>new Promise((res,rej)=>{const t=setTimeout(res,ms);signal?.addEventListener('abort',()=>{clearTimeout(t);rej(new AIError('cancelled'))},{once:true})});
-async function gemini(parts,signal,say=()=>{},models=[chosenModel()]){
+// With opts.onSlow (estimates) a model is never cut off: once its usual time passes, onSlow lets the
+// user switch while we keep waiting; only "busy" retries stop, after BUSY_CAP. Without it (key test),
+// each model is cut off at its time limit and we fall through to the next.
+const BUSY_CAP=180000;
+async function gemini(parts,signal,say=()=>{},models=[chosenModel()],opts={}){
   const key=ai.key;if(!key)throw new AIError('no_key');
+  const patient=!!opts.onSlow;
   let last=null;
   for(const [i,m] of models.entries()){
-    const deadline=m.budget?Date.now()+m.budget:Infinity,after=models[i+1]?'switching':'giving up';
+    const start=Date.now(),deadline=patient?start+BUSY_CAP:m.budget?start+m.budget:Infinity,after=models[i+1]?'switching':'giving up';
     if(!i)say(`Asking ${m.label}`);
+    const slowT=patient&&m.budget?setTimeout(()=>opts.onSlow(m),m.budget):null;
+    try{
     for(;;){
       const left=deadline-Date.now();if(left<=0){last=new AIError('busy');break}
       const t=new AbortController(),stop=()=>t.abort();signal?.addEventListener('abort',stop);
-      const timer=left<Infinity?setTimeout(stop,left):null;
-      const tick=left<Infinity?setInterval(()=>say(`${m.label} is taking a while (${after} in ${Math.max(0,Math.ceil((deadline-Date.now())/1000))}s)`),5000):null;
+      const timer=!patient&&left<Infinity?setTimeout(stop,left):null;
+      const tick=!patient&&left<Infinity?setInterval(()=>say(`${m.label} is taking a while (${after} in ${Math.max(0,Math.ceil((deadline-Date.now())/1000))}s)`),5000):null;
       let r,j;
       try{r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m.id}:generateContent`,{method:'POST',signal:t.signal,
         headers:{'Content-Type':'application/json','x-goog-api-key':key},
@@ -827,7 +841,7 @@ async function gemini(parts,signal,say=()=>{},models=[chosenModel()]){
       if(r.status===404){last=new AIError('model');break}
       if(r.status===503){last=new AIError('busy');if(deadline===Infinity)break;
         const s=Math.ceil((deadline-Date.now())/1000);if(s<=0)break;
-        say(`${m.label} is busy, retrying (${after} in ${s}s)`);await sleep(Math.min(5000,deadline-Date.now()),signal);continue}
+        say(patient?`${m.label} is busy, retrying`:`${m.label} is busy, retrying (${after} in ${s}s)`);await sleep(Math.min(5000,deadline-Date.now()),signal);continue}
       if(!r.ok){const msg=j.error?.message||'';
         if(r.status===429){last=new AIError('rate_limited',msg);break}
         if((r.status===400&&/api key/i.test(msg))||r.status===401||r.status===403)throw new AIError('bad_key',msg);
@@ -837,6 +851,7 @@ async function gemini(parts,signal,say=()=>{},models=[chosenModel()]){
       ai.lastModel=m.label;
       try{return JSON.parse(txt.replace(/^```(?:json)?\s*|\s*```$/g,''))}catch(e){throw new AIError('invalid_json')}
     }
+    }finally{clearTimeout(slowT)}
     const next=models[i+1];
     if(next){const why={model:'is unavailable',slow:'is taking too long',rate_limited:'has hit its free limit'}[last?.code]||'is busy';say(`${m.label} ${why}, switching to ${next.label}`,true)}
   }
@@ -854,13 +869,26 @@ function toJpegB64(file,max=1280){
 const AI_MSG={no_key:'Add a Gemini key in Targets first.',bad_key:'Google rejected the API key. Check it in Targets.',rate_limited:'This model has used up its free daily limit. Pick another model, or try again tomorrow.',
   network:'No connection to Google. Check your internet and try again.',refused:'Gemini could not estimate this. Try another photo or add a note.',invalid_json:'The estimate came back garbled. Tap Estimate to try again.',
   image:'That photo could not be read. Try a different one.',model:'This model is not available for your key. Pick another one.',slow:'This model took too long. Pick another model, or try again in a minute.',busy:'This model is busy right now. Pick another model, or try again in a minute.',failed:'The estimate failed. Try again in a moment.'};
-let ctl=null;
-async function estimate(){
-  if(!D||D.busy)return;const st=$('#estStatus');
+let ctl=null,run=0;
+// restart: cancel a request still running (switching model, or a new photo) and start again
+async function estimate(restart){
+  if(!D||(D.busy&&!restart))return;const st=$('#estStatus');
   if(!D.file&&!D.note.trim()){st.className='status err';st.textContent='Add a photo or describe what you ate.';return}
-  ctl?.abort();ctl=new AbortController();const my=D;my.busy=true;updateLookup();
-  // keep a running line of what's happening; switches also pop a toast
-  const say=(msg,announce)=>{if(D!==my)return;st.className='status';st.innerHTML=`<span class="dots">${esc(msg)}</span>`;if(announce)toast(msg)};
+  ctl?.abort();ctl=new AbortController();const id=++run,my=D,signal=ctl.signal;
+  const model=MODELS.find(m=>m.id===$('#modelSel').value)||chosenModel();
+  try{localStorage.setItem(AISEL,model.id)}catch(e){}
+  my.busy=true;my.slow=null;updateLookup();
+  // a running line of what's happening with a live timer; switches also pop a toast
+  const t0=Date.now();let phase='',offered='';
+  const secs=()=>Math.floor((Date.now()-t0)/1000);
+  const show=()=>{if(D!==my||id!==run)return;st.className='status';
+    st.innerHTML=`<span class="dots">${esc(phase)} · ${secs()}s</span>${my.slow?'<br>Taking longer than usual. Keep waiting, or pick a model and tap the button above to switch.':''}`};
+  const say=(msg,announce)=>{phase=msg;show();if(announce&&D===my&&id===run)toast(msg)};
+  const ticker=setInterval(show,1000);
+  const onSlow=m=>{if(D!==my||id!==run)return;my.slow=m;phase=`Still waiting on ${m.label}`;
+    // offer the next model in the list, but leave the choice to the user
+    const sel=$('#modelSel'),i=MODELS.findIndex(x=>x.id===m.id);if(sel.value===m.id)sel.value=offered=MODELS[(i+1)%MODELS.length].id;
+    updateLookup();show();toast(`${m.label} is taking longer than usual. Keep waiting, or switch model.`)};
   say(my.file?'Preparing your photo':'Working it out');
   const mac=macrosOn();
   const prompt=`You estimate nutrition for a calorie and protein tracker. The user lives in Singapore, so expect hawker, kopitiam and other local dishes as well as Western, Japanese, Korean and other food.
@@ -874,18 +902,21 @@ If there is no food or drink, return {"title":"","items":[],"confidence":"low","
   try{
     const parts=[{text:prompt}];
     if(my.file)parts.push({inline_data:{mime_type:'image/jpeg',data:await toJpegB64(my.file)}});
-    const r=await gemini(parts,ctl.signal,say);
-    if(D!==my)return;
+    const r=await gemini(parts,signal,say,[model],{onSlow});
+    if(D!==my||id!==run)return;
     const items=Array.isArray(r?.items)?r.items.map(i=>({name:String(i.name||'').slice(0,60),portion:String(i.portion||'').slice(0,40),kcal:Math.max(0,+i.kcal||0),protein:Math.max(0,+(i.protein_g??i.protein)||0),carbs:i.carbs_g!=null?Math.max(0,+i.carbs_g||0):'',fat:i.fat_g!=null?Math.max(0,+i.fat_g||0):''})).filter(i=>i.name):[];
     if(!items.length){st.className='status err';st.textContent=r?.note||'No food found. Try another photo or add a note.';return}
     D.items=items;D.title=String(r.title||items.map(i=>i.name).join(', ')).slice(0,60);D.conf=['low','medium','high'].includes(r.confidence)?r.confidence:null;D.aiNote=String(r.note||'');
-    st.className='status';st.textContent=`Estimated with ${ai.lastModel}`;renderItems();
+    st.className='status';st.textContent=`Estimated with ${ai.lastModel} in ${secs()}s`;renderItems();
   }catch(e){
-    if(D!==my||e?.code==='cancelled')return;
+    if(D!==my||id!==run||e?.code==='cancelled')return;
     st.className='status err';st.textContent=AI_MSG[e?.code]||AI_MSG.failed;
-  }finally{if(D===my){my.busy=false;updateLookup()}}
+  }finally{clearInterval(ticker);if(D===my&&id===run){
+    // the first model answered after all: put back the model we only offered
+    if(offered&&$('#modelSel').value===offered)$('#modelSel').value=model.id;
+    my.busy=false;my.slow=null;updateLookup()}}
 }
-$('#estimateBtn').onclick=estimate;
+$('#estimateBtn').onclick=()=>estimate(!!D?.slow);
 $('#noteIn').addEventListener('input',updateLookup);
 async function saveKey(){
   const v=$('#aiKey').value.trim();ai.key=v;
@@ -907,7 +938,7 @@ function setPhoto(file){
   if(!file)$('#photoIn').value='';
   updateLookup();
 }
-$('#photoIn').onchange=e=>{const f=e.target.files[0];if(f&&D){setPhoto(f);if(ai.key)estimate()}};
+$('#photoIn').onchange=e=>{const f=e.target.files[0];if(f&&D){setPhoto(f);if(ai.key)estimate(true)}};
 $('#photoRemove').onclick=()=>{setPhoto(null);pickPhoto(true)};
 
 /* roll the date over if the app stays open past midnight */

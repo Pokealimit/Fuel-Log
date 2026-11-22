@@ -18,17 +18,17 @@
 <style>
 :root{
   --bg:#F1F4F0; --surface:#FFFFFF; --surface2:#E7ECE6; --ink:#17201B; --muted:#5C6A62; --line:#D6DDD5;
-  --kcal:#C2631B; --kcal-soft:#F6E3D3; --protein:#0F7565; --protein-soft:#D4ECE6; --carbs:#6A55B8; --fat:#A9761A; --over:#C03636; --onink:#F7FAF6;
+  --kcal:#C2631B; --kcal-soft:#F6E3D3; --protein:#0F7565; --protein-soft:#D4ECE6; --good:#1F8A4C; --carbs:#6A55B8; --fat:#A9761A; --over:#C03636; --onink:#F7FAF6;
   --display:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;
   --body:"Figtree",-apple-system,"Segoe UI",system-ui,sans-serif;
   --r:16px; color-scheme:light;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0F1411; --surface:#171F1A; --surface2:#212A24; --ink:#E8EEE9; --muted:#93A299; --line:#2B3630;
-  --kcal:#F08B40; --kcal-soft:#3A2717; --protein:#3CC4A9; --protein-soft:#14332C; --carbs:#A797F2; --fat:#E2B35A; --over:#FF6E6E; --onink:#0F1411; color-scheme:dark}}
+  --kcal:#F08B40; --kcal-soft:#3A2717; --protein:#3CC4A9; --protein-soft:#14332C; --good:#5CCB86; --carbs:#A797F2; --fat:#E2B35A; --over:#FF6E6E; --onink:#0F1411; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0F1411; --surface:#171F1A; --surface2:#212A24; --ink:#E8EEE9; --muted:#93A299; --line:#2B3630;
-  --kcal:#F08B40; --kcal-soft:#3A2717; --protein:#3CC4A9; --protein-soft:#14332C; --carbs:#A797F2; --fat:#E2B35A; --over:#FF6E6E; --onink:#0F1411; color-scheme:dark}
+  --kcal:#F08B40; --kcal-soft:#3A2717; --protein:#3CC4A9; --protein-soft:#14332C; --good:#5CCB86; --carbs:#A797F2; --fat:#E2B35A; --over:#FF6E6E; --onink:#0F1411; color-scheme:dark}
 
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -197,7 +197,7 @@ nav.tabs button{position:relative}
 .bal-row .l{font-size:11.5px;color:var(--muted)}
 .bal-row .op{color:var(--muted);font-size:18px}
 .bal-v{margin:10px 0 0;font-size:13.5px;color:var(--muted);text-align:center}
-.bal-v.sur b{color:var(--kcal)} .bal-v.def b{color:var(--protein)}
+.bal-v b{color:var(--ink)} .bal-v b.good{color:var(--good)} .bal-v b.bad{color:var(--over)}
 .entry .burn{color:var(--protein);font-weight:600}
 .caution{font-size:13px;line-height:1.5;background:var(--kcal-soft);border-radius:12px;padding:12px 14px;color:var(--ink)}
 .caution b{color:var(--kcal)}
@@ -482,13 +482,21 @@ function balance(key){
   const target=T?.kcal||0,maint=c?Math.round(c.tdee):0;
   return {eaten,burnt:b.total,counted:b.counted,net,target,own,maint,diff:target?net-target:null,mdiff:maint?net-maint:null};
 }
+// green/red by goal: losing wants under, building wants over, maintaining wants close (within 10%).
+// Being under isn't red until the day is over, since you can still eat.
+function tone(diff,ref,key){
+  const goal=S.profile?.goal||'maintain',done=key<todayKey();
+  if(goal==='maintain'&&Math.abs(diff)<=ref*.1)return 'good';
+  if(diff>0)return goal==='gain'?'good':'bad';
+  return goal==='lose'?'good':done?'bad':'';
+}
 function balanceCard(key,onActivity){
   const b=balance(key);if(!onActivity&&!b.eaten&&!b.burnt)return '';
   const sofar=key===todayKey()?' so far today':'';
   const verdict=!b.eaten&&!b.burnt?`<p class="bal-v">Nothing logged ${key===todayKey()?'yet today':'for this day'}.</p>`:b.diff==null?'<p class="bal-v">Set your targets to see whether you are in a surplus or deficit.</p>'
-    :`<p class="bal-v ${b.diff>0?'sur':'def'}">${Math.abs(b.diff)<1?`<b>Right on your target</b>${sofar}`
-      :`<b>${fmt(Math.abs(b.diff))} kcal ${b.diff>0?'over':'under'}</b> your ${b.own?'own ':''}target of ${fmt(b.target)} kcal${sofar}`}</p>
-      ${b.mdiff!=null&&Math.abs(b.maint-b.target)>=50?`<p class="bal-v" style="margin-top:4px;font-size:12.5px">${Math.abs(b.mdiff)<1?'Right on':`A ${fmt(Math.abs(b.mdiff))} kcal ${b.mdiff>0?'surplus':'deficit'} vs`} your maintenance of ${fmt(b.maint)} kcal</p>`:''}`;
+    :`<p class="bal-v">${Math.abs(b.diff)<1?`<b class="good">Right on your target</b>${sofar}`
+      :`<b class="${tone(b.diff,b.target,key)}">${fmt(Math.abs(b.diff))} kcal ${b.diff>0?'over':'under'}</b> your ${b.own?'own ':''}target of ${fmt(b.target)} kcal${sofar}`}</p>
+      ${b.mdiff!=null&&Math.abs(b.maint-b.target)>=50?`<p class="bal-v" style="margin-top:4px;font-size:12.5px">${Math.abs(b.mdiff)<1?'Right on':`<b class="${tone(b.mdiff,b.maint,key)}">${fmt(Math.abs(b.mdiff))} kcal ${b.mdiff>0?'surplus':'deficit'}</b> vs`} your maintenance of ${fmt(b.maint)} kcal</p>`:''}`;
   const body=`<div class="bal-h"><span>Calorie balance</span>${onActivity?'':'<span>+ Activity ›</span>'}</div>
     <div class="bal-row"><div><div class="v">${fmt(b.eaten)}</div><div class="l">eaten</div></div><div class="op">−</div>
     <div><div class="v">${fmt(b.counted)}</div><div class="l">burnt${b.counted!==b.burnt?` (${burnPct()}% of ${fmt(b.burnt)})`:''}</div></div><div class="op">=</div>

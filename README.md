@@ -90,6 +90,8 @@ Open the **Activity** tab to log exercise.
 
 Burnt calories are added to what you can eat today. The Today ring shows, for example, "823 left of 2,873 · incl. 343 burnt". The **Calorie balance** card shows **eaten − burnt = net**, and how far you are **over or under your calorie target**. It's the same target the Today ring uses, including your own number if you set one in **Use my own numbers instead**. When Fuel Log calculates your target for a goal like losing fat, the card also shows your **surplus or deficit** against your maintenance calories (what you'd burn in a normal day without logged exercise).
 
+The numbers are coloured by the goal you chose in Targets. **Green** means you're on track: under target or in a deficit when losing fat, over target or in a surplus when building muscle, within 10% when maintaining. **Red** means you're off track. Being under target isn't shown in red until the day is over, since you can still eat.
+
 **Count burnt calories (100% / 75% / 50%)** sets how much of what you burn is added back. The activity level you chose in Targets already allows for your usual training, and watches often overestimate. If you log your regular workouts here, 50–75% avoids counting them twice.
 
 > You can't out-train a bad diet. Exercise is great for your health, but it burns fewer calories than most people expect. Eating in moderation is still what makes the difference.

@@ -391,7 +391,7 @@ function targets(){
 /* ---------------- helpers ---------------- */
 function dayTotals(key){const e=S.days[key]?.entries||[];return e.reduce((t,x)=>({kcal:t.kcal+(+x.kcal||0),protein:t.protein+(+x.protein||0),carbs:t.carbs+(+x.carbs||0),fat:t.fat+(+x.fat||0),unknown:t.unknown+(x.carbs==null&&x.fat==null?1:0)}),{kcal:0,protein:0,carbs:0,fat:0,unknown:0})}
 function ring(val,target,color,soft){
-  const r=48,c=2*Math.PI*r,frac=target?Math.min(val/target,1):0;
+  const r=48,c=2*Math.PI*r,frac=target?Math.max(0,Math.min(val/target,1)):0;
   return `<svg viewBox="0 0 116 116" aria-hidden="true"><circle cx="58" cy="58" r="${r}" fill="none" stroke="var(${soft})" stroke-width="11"/>
   <circle cx="58" cy="58" r="${r}" fill="none" stroke="var(${color})" stroke-width="11" stroke-linecap="round" stroke-dasharray="${(frac*c).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 58 58)"/></svg>`;
 }
@@ -434,14 +434,13 @@ function backupNag(){
 function viewToday(){
   const k=S.date,t=dayTotals(k),T=targets(),isToday=k===todayKey(),burn=dayBurn(k);
   const d=fromKey(k).toLocaleDateString('en-SG',{day:'numeric',month:'short',year:'numeric'});
-  const gauge=(val,tg,unit,label,col,soft,extra=0)=>{
-    // calories: activity you log adds to what you can eat today
-    if(tg)tg+=extra;const over=tg&&val>tg;
+  const gauge=(val,tg,unit,label,col,soft,note='')=>{
+    const over=tg&&val>tg;
     const left=!tg?`<div class="notarget">No target yet · <button data-go="targets">Set one</button></div>`
       :over?`<div class="left"><b class="num">${fmt(val-tg)}${unit==='g'?' g':''}</b> over ${fmt(tg)}</div>`
-      :`<div class="left"><b class="num">${fmt(tg-val)}${unit==='g'?' g':''}</b> left of ${fmt(tg)}</div>`;
+      :`<div class="left"><b class="num">${fmt(tg-val)}${unit==='g'?' g':''}</b> ${val<0?'left today':`left of ${fmt(tg)}`}</div>`;
     return `<div class="gauge ${over&&unit==='kcal'?'over':''}">${ring(val,tg,col,soft)}
-      <div class="mid"><div class="t">${fmt(val)}</div><div class="u">${label}</div></div>${left}${tg&&extra?`<div class="left">incl. ${fmt(extra)} burnt</div>`:''}</div>`;
+      <div class="mid"><div class="t">${fmt(val)}</div><div class="u">${label}</div></div>${left}${note?`<div class="left">${note}</div>`:''}</div>`;
   };
   const meals=MEALS.map(m=>{
     const list=(S.days[k]?.entries||[]).filter(e=>e.meal===m.id).sort((a,b)=>a.ts-b.ts);
@@ -456,7 +455,7 @@ function viewToday(){
   return `<div class="wrap">
     <div class="top"><span class="brand">Fuel Log</span><div class="r">${syncChip()}${themeBtn()}</div></div>
     <div class="daynav"><button data-day="-1" aria-label="Previous day">‹</button><div class="lbl">${dateLabel(k)}<small>${d}</small></div><button data-day="1" aria-label="Next day" ${isToday?'disabled':''}>›</button></div>
-    <div class="summary">${gauge(t.kcal,T?.kcal,'kcal','kcal','--kcal','--kcal-soft',burn.counted)}${gauge(t.protein,T?.protein,'g','g protein','--protein','--protein-soft')}</div>
+    <div class="summary">${burn.counted?gauge(t.kcal-burn.counted,T?.kcal,'kcal','kcal net','--kcal','--kcal-soft',`<span class="num">${fmt(t.kcal)}</span> eaten · <span class="num">${fmt(burn.counted)}</span> burnt`):gauge(t.kcal,T?.kcal,'kcal','kcal','--kcal','--kcal-soft')}${gauge(t.protein,T?.protein,'g','g protein','--protein','--protein-soft')}</div>
     ${macrosOn()?macroRow(t,T):''}
     ${balanceCard(k,false)}
     <div class="btnrow" style="grid-template-columns:1.4fr 1fr">

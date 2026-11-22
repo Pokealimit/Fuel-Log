@@ -475,18 +475,20 @@ const metFor=n=>ACTS.find(([a])=>norm(a)===norm(n))?.[1]||null;
 const burnPct=()=>[50,75,100].includes(+S.settings?.burnPct)?+S.settings.burnPct:100;
 function dayBurn(key){const a=S.days[key]?.activities||[];const total=a.reduce((n,x)=>n+(+x.kcal||0),0);return {total,counted:Math.round(total*burnPct()/100),n:a.length}}
 function bodyWeight(){return +S.profile?.weight>0?+S.profile.weight:null}
-// surplus/deficit against maintenance (your target may already include a deficit); falls back to the target
+// net calories against your calorie target (the same number the Today ring uses, including your own
+// number if you set one); with calculated targets we also show how that compares with maintenance
 function balance(key){
-  const eaten=dayTotals(key).kcal,b=dayBurn(key),net=eaten-b.counted,c=calc(S.profile),T=targets();
-  const ref=c?Math.round(c.tdee):T?.kcal||0;
-  return {eaten,burnt:b.total,counted:b.counted,net,ref,refLabel:c?'maintenance':'target',diff:ref?net-ref:null};
+  const eaten=dayTotals(key).kcal,b=dayBurn(key),net=eaten-b.counted,T=targets(),own=+S.profile?.kcalOverride>0,c=own?null:calc(S.profile);
+  const target=T?.kcal||0,maint=c?Math.round(c.tdee):0;
+  return {eaten,burnt:b.total,counted:b.counted,net,target,own,maint,diff:target?net-target:null,mdiff:maint?net-maint:null};
 }
 function balanceCard(key,onActivity){
   const b=balance(key);if(!onActivity&&!b.eaten&&!b.burnt)return '';
   const sofar=key===todayKey()?' so far today':'';
   const verdict=!b.eaten&&!b.burnt?`<p class="bal-v">Nothing logged ${key===todayKey()?'yet today':'for this day'}.</p>`:b.diff==null?'<p class="bal-v">Set your targets to see whether you are in a surplus or deficit.</p>'
-    :Math.abs(b.diff)<1?`<p class="bal-v"><b>Right on your ${b.refLabel}</b>${sofar}</p>`
-    :`<p class="bal-v ${b.diff>0?'sur':'def'}"><b>${fmt(Math.abs(b.diff))} kcal ${b.diff>0?'surplus':'deficit'}</b>${sofar} vs your ${b.refLabel} of ${fmt(b.ref)} kcal</p>`;
+    :`<p class="bal-v ${b.diff>0?'sur':'def'}">${Math.abs(b.diff)<1?`<b>Right on your target</b>${sofar}`
+      :`<b>${fmt(Math.abs(b.diff))} kcal ${b.diff>0?'over':'under'}</b> your ${b.own?'own ':''}target of ${fmt(b.target)} kcal${sofar}`}</p>
+      ${b.mdiff!=null&&Math.abs(b.maint-b.target)>=50?`<p class="bal-v" style="margin-top:4px;font-size:12.5px">${Math.abs(b.mdiff)<1?'Right on':`A ${fmt(Math.abs(b.mdiff))} kcal ${b.mdiff>0?'surplus':'deficit'} vs`} your maintenance of ${fmt(b.maint)} kcal</p>`:''}`;
   const body=`<div class="bal-h"><span>Calorie balance</span>${onActivity?'':'<span>+ Activity ›</span>'}</div>
     <div class="bal-row"><div><div class="v">${fmt(b.eaten)}</div><div class="l">eaten</div></div><div class="op">−</div>
     <div><div class="v">${fmt(b.counted)}</div><div class="l">burnt${b.counted!==b.burnt?` (${burnPct()}% of ${fmt(b.burnt)})`:''}</div></div><div class="op">=</div>

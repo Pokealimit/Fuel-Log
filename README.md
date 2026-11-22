@@ -88,7 +88,7 @@ Open the **Activity** tab to log exercise.
 - For anything not in the list, type its name. It's offered as a quick pick next time.
 - Tap a logged activity to edit or delete it.
 
-Burnt calories are added to what you can eat today. The Today ring shows, for example, "823 left of 2,873 · incl. 343 burnt". The **Calorie balance** card shows **eaten − burnt = net**, and whether you're in a **surplus or deficit** against your maintenance calories (the calories you'd burn in a normal day without logged exercise). Maintenance is worked out from your details in Targets. If you haven't entered them, it uses your calorie target instead.
+Burnt calories are added to what you can eat today. The Today ring shows, for example, "823 left of 2,873 · incl. 343 burnt". The **Calorie balance** card shows **eaten − burnt = net**, and how far you are **over or under your calorie target**. It's the same target the Today ring uses, including your own number if you set one in **Use my own numbers instead**. When Fuel Log calculates your target for a goal like losing fat, the card also shows your **surplus or deficit** against your maintenance calories (what you'd burn in a normal day without logged exercise).
 
 **Count burnt calories (100% / 75% / 50%)** sets how much of what you burn is added back. The activity level you chose in Targets already allows for your usual training, and watches often overestimate. If you log your regular workouts here, 50–75% avoids counting them twice.
 

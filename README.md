@@ -6,6 +6,7 @@ A simple calorie and protein tracker for your phone. Snap a photo of your meal a
 - **Private by default.** Your log is stored on your own phone, not on a server. Nobody else can see it.
 - **No account, no install.** It's a single web page (`index.html`). You can add it to your home screen so it opens like an app.
 - **Optional carbs and fat**, if you want more than calories and protein.
+- **Activity tracking.** Log workouts and see the calories you burnt counted in your day, and whether you're in a surplus or deficit.
 
 Live site: https://pokealimit.github.io/Fuel-Log/
 
@@ -79,6 +80,20 @@ For meals you eat often, like your morning kopi or your usual chicken rice, save
 - **To change a favourite:** fill the form from it and change the numbers. The button changes to **★ Update favourite with these numbers**; tap it to save the new numbers. If you only change the numbers for today and don't tap it, the favourite stays as it was.
 - **To remove one:** tap **★ In favourites** while it's filled in, or go to **Targets → Favourite meals → Remove**.
 
+### Activity: calories burnt and your calorie balance
+
+Open the **Activity** tab to log exercise.
+
+- **Pick an activity** (running, badminton, gym…) and enter the minutes. Fuel Log estimates the calories burnt from your weight in Targets. If you have a number from your watch or the machine, type it into **Calories burnt** instead.
+- For anything not in the list, type its name. It's offered as a quick pick next time.
+- Tap a logged activity to edit or delete it.
+
+Burnt calories are added to what you can eat today. The Today ring shows, for example, "823 left of 2,873 · incl. 343 burnt". The **Calorie balance** card shows **eaten − burnt = net**, and whether you're in a **surplus or deficit** against your maintenance calories (the calories you'd burn in a normal day without logged exercise). Maintenance is worked out from your details in Targets. If you haven't entered them, it uses your calorie target instead.
+
+**Count burnt calories (100% / 75% / 50%)** sets how much of what you burn is added back. The activity level you chose in Targets already allows for your usual training, and watches often overestimate. If you log your regular workouts here, 50–75% avoids counting them twice.
+
+> You can't out-train a bad diet. Exercise is great for your health, but it burns fewer calories than most people expect. Eating in moderation is still what makes the difference.
+
 ### Editing and past days
 
 - Tap any logged meal to edit or delete it.
@@ -101,7 +116,7 @@ Your log only lives on your phone, in the browser's storage. It can be lost if y
 - **Targets → Your data → Export backup** saves a `.json` file. Keep it in Files, iCloud Drive or Google Drive.
 - **Import backup** restores a backup file. It replaces the log on the phone with the backup.
 
-Backups include your meals, targets, favourites and settings. They don't include your Gemini key. Backups made by older versions of Fuel Log still import fine. Fuel Log reminds you on the Today screen if you haven't backed up in a while.
+Backups include your meals, activities, targets, favourites and settings. They don't include your Gemini key. Backups made by older versions of Fuel Log still import fine. Fuel Log reminds you on the Today screen if you haven't backed up in a while.
 
 ---
 

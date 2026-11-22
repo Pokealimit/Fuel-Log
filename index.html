@@ -187,6 +187,20 @@ nav.tabs button{flex:1;max-width:160px;border:0;background:none;display:flex;fle
 nav.tabs button svg{width:24px;height:24px}
 nav.tabs button.on{color:var(--ink)}
 nav.tabs button.on svg{stroke:var(--protein)}
+nav.tabs button{position:relative}
+.newtag{position:absolute;top:1px;left:calc(50% + 7px);background:var(--over);color:#fff;font-size:9px;font-weight:800;letter-spacing:.5px;padding:1px 5px;border-radius:999px;line-height:1.5}
+.balance{display:block;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
+.bal-h{display:flex;justify-content:space-between;align-items:center;font:600 14px/1.2 var(--display);margin-bottom:8px}
+.bal-h span:last-child{font:600 13px var(--body);color:var(--protein)}
+.bal-row{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;align-items:center;gap:6px;text-align:center}
+.bal-row .v{font:700 20px/1.1 var(--display);font-variant-numeric:tabular-nums}
+.bal-row .l{font-size:11.5px;color:var(--muted)}
+.bal-row .op{color:var(--muted);font-size:18px}
+.bal-v{margin:10px 0 0;font-size:13.5px;color:var(--muted);text-align:center}
+.bal-v.sur b{color:var(--kcal)} .bal-v.def b{color:var(--protein)}
+.entry .burn{color:var(--protein);font-weight:600}
+.caution{font-size:13px;line-height:1.5;background:var(--kcal-soft);border-radius:12px;padding:12px 14px;color:var(--ink)}
+.caution b{color:var(--kcal)}
 
 #scrim{position:fixed;inset:0;background:rgba(10,14,12,.45);z-index:30}
 #sheet{position:fixed;left:0;right:0;bottom:0;max-height:calc(100% - env(safe-area-inset-top,0px) - 12px);background:var(--bg);border-radius:22px 22px 0 0;z-index:31;display:flex;flex-direction:column;box-shadow:0 -10px 40px rgba(0,0,0,.2);
@@ -253,6 +267,7 @@ textarea{resize:none;line-height:1.4}
   <main id="view" aria-live="polite"></main>
   <nav class="tabs" aria-label="Sections">
     <button data-tab="today" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v4.5l3 2"/></svg>Today</button>
+    <button data-tab="activity"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M13 3L5 13.5h6L10 21l8-10.5h-6z"/></svg>Activity<span class="newtag" id="actNew" hidden>NEW</span></button>
     <button data-tab="trends"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 19V11M10 19V6M15 19v-5M20 19V9"/></svg>Trends</button>
     <button data-tab="targets"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg>Targets</button>
   </nav>
@@ -393,6 +408,7 @@ function render(){
   const v=$('#view');
   if(S.tab==='today')v.innerHTML=viewToday();
   else if(S.tab==='trends')v.innerHTML=viewTrends();
+  else if(S.tab==='activity')v.innerHTML=viewActivity();
   else if(!v.querySelector('#tForm'))v.innerHTML=viewTargets();
   else updateTargetsResult();
 }
@@ -416,15 +432,16 @@ function backupNag(){
   return `<div class="banner"><b>${days===null?'No backup yet.':`Last backup ${days} days ago.`}</b> Your log lives only on this phone. <button class="link" style="padding:0" data-go="targets" data-scroll="backup">Export a backup</button></div>`;
 }
 function viewToday(){
-  const k=S.date,t=dayTotals(k),T=targets(),isToday=k===todayKey();
+  const k=S.date,t=dayTotals(k),T=targets(),isToday=k===todayKey(),burn=dayBurn(k);
   const d=fromKey(k).toLocaleDateString('en-SG',{day:'numeric',month:'short',year:'numeric'});
-  const gauge=(val,tg,unit,label,col,soft)=>{
-    const over=tg&&val>tg;
+  const gauge=(val,tg,unit,label,col,soft,extra=0)=>{
+    // calories: activity you log adds to what you can eat today
+    if(tg)tg+=extra;const over=tg&&val>tg;
     const left=!tg?`<div class="notarget">No target yet · <button data-go="targets">Set one</button></div>`
       :over?`<div class="left"><b class="num">${fmt(val-tg)}${unit==='g'?' g':''}</b> over ${fmt(tg)}</div>`
       :`<div class="left"><b class="num">${fmt(tg-val)}${unit==='g'?' g':''}</b> left of ${fmt(tg)}</div>`;
     return `<div class="gauge ${over&&unit==='kcal'?'over':''}">${ring(val,tg,col,soft)}
-      <div class="mid"><div class="t">${fmt(val)}</div><div class="u">${label}</div></div>${left}</div>`;
+      <div class="mid"><div class="t">${fmt(val)}</div><div class="u">${label}</div></div>${left}${tg&&extra?`<div class="left">incl. ${fmt(extra)} burnt</div>`:''}</div>`;
   };
   const meals=MEALS.map(m=>{
     const list=(S.days[k]?.entries||[]).filter(e=>e.meal===m.id).sort((a,b)=>a.ts-b.ts);
@@ -439,8 +456,9 @@ function viewToday(){
   return `<div class="wrap">
     <div class="top"><span class="brand">Fuel Log</span><div class="r">${syncChip()}${themeBtn()}</div></div>
     <div class="daynav"><button data-day="-1" aria-label="Previous day">‹</button><div class="lbl">${dateLabel(k)}<small>${d}</small></div><button data-day="1" aria-label="Next day" ${isToday?'disabled':''}>›</button></div>
-    <div class="summary">${gauge(t.kcal,T?.kcal,'kcal','kcal','--kcal','--kcal-soft')}${gauge(t.protein,T?.protein,'g','g protein','--protein','--protein-soft')}</div>
+    <div class="summary">${gauge(t.kcal,T?.kcal,'kcal','kcal','--kcal','--kcal-soft',burn.counted)}${gauge(t.protein,T?.protein,'g','g protein','--protein','--protein-soft')}</div>
     ${macrosOn()?macroRow(t,T):''}
+    ${balanceCard(k,false)}
     <div class="btnrow" style="grid-template-columns:1.4fr 1fr">
       <button class="btn primary" data-snap><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 8h3l1.6-2.4h6.8L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.6"/></svg>Snap a meal</button>
       <button class="btn" data-add="">Enter manually</button>
@@ -450,6 +468,92 @@ function viewToday(){
   </div>`;
 }
 
+/* ---------------- activity ---------------- */
+// rough intensity (MET) for common activities: kcal ≈ MET × body weight (kg) × hours
+const ACTS=[['Brisk walk',4.3],['Running',9.8],['Cycling',7.5],['Swimming',6],['Gym / weights',5],['HIIT',8],['Badminton',5.5],['Football',7],['Basketball',6.5],['Hiking',6],['Yoga',2.5],['Dancing',5]];
+const metFor=n=>ACTS.find(([a])=>norm(a)===norm(n))?.[1]||null;
+const burnPct=()=>[50,75,100].includes(+S.settings?.burnPct)?+S.settings.burnPct:100;
+function dayBurn(key){const a=S.days[key]?.activities||[];const total=a.reduce((n,x)=>n+(+x.kcal||0),0);return {total,counted:Math.round(total*burnPct()/100),n:a.length}}
+function bodyWeight(){return +S.profile?.weight>0?+S.profile.weight:null}
+// surplus/deficit against maintenance (your target may already include a deficit); falls back to the target
+function balance(key){
+  const eaten=dayTotals(key).kcal,b=dayBurn(key),net=eaten-b.counted,c=calc(S.profile),T=targets();
+  const ref=c?Math.round(c.tdee):T?.kcal||0;
+  return {eaten,burnt:b.total,counted:b.counted,net,ref,refLabel:c?'maintenance':'target',diff:ref?net-ref:null};
+}
+function balanceCard(key,onActivity){
+  const b=balance(key);if(!onActivity&&!b.eaten&&!b.burnt)return '';
+  const sofar=key===todayKey()?' so far today':'';
+  const verdict=!b.eaten&&!b.burnt?`<p class="bal-v">Nothing logged ${key===todayKey()?'yet today':'for this day'}.</p>`:b.diff==null?'<p class="bal-v">Set your targets to see whether you are in a surplus or deficit.</p>'
+    :Math.abs(b.diff)<1?`<p class="bal-v"><b>Right on your ${b.refLabel}</b>${sofar}</p>`
+    :`<p class="bal-v ${b.diff>0?'sur':'def'}"><b>${fmt(Math.abs(b.diff))} kcal ${b.diff>0?'surplus':'deficit'}</b>${sofar} vs your ${b.refLabel} of ${fmt(b.ref)} kcal</p>`;
+  const body=`<div class="bal-h"><span>Calorie balance</span>${onActivity?'':'<span>+ Activity ›</span>'}</div>
+    <div class="bal-row"><div><div class="v">${fmt(b.eaten)}</div><div class="l">eaten</div></div><div class="op">−</div>
+    <div><div class="v">${fmt(b.counted)}</div><div class="l">burnt${b.counted!==b.burnt?` (${burnPct()}% of ${fmt(b.burnt)})`:''}</div></div><div class="op">=</div>
+    <div><div class="v">${fmt(b.net)}</div><div class="l">net</div></div></div>${verdict}`;
+  return onActivity?`<div class="balance">${body}</div>`:`<button type="button" class="balance" data-go="activity">${body}</button>`;
+}
+function pastActivities(){
+  const all=[];for(const d of Object.values(S.days))for(const a of d.activities||[])all.push(a);
+  all.sort((a,b)=>b.ts-a.ts);const seen=new Set(ACTS.map(([n])=>norm(n))),out=[];
+  for(const a of all){const k=norm(a.name);if(!k||seen.has(k))continue;seen.add(k);out.push(a)}
+  return out.slice(0,8);
+}
+let A={edit:null,touched:false};
+function viewActivity(){
+  const k=S.date,isToday=k===todayKey(),list=(S.days[k]?.activities||[]).slice().sort((a,b)=>a.ts-b.ts),ed=A.edit&&list.find(x=>x.id===A.edit);
+  if(A.edit&&!ed)A={edit:null,touched:false};
+  const d=fromKey(k).toLocaleDateString('en-SG',{day:'numeric',month:'short',year:'numeric'}),w=bodyWeight(),total=list.reduce((n,x)=>n+(+x.kcal||0),0);
+  return `<div class="wrap">
+    <div class="top"><h2 class="h">Activity</h2><div class="r">${themeBtn()}</div></div>
+    <div class="daynav"><button data-day="-1" aria-label="Previous day">‹</button><div class="lbl">${dateLabel(k)}<small>${d}</small></div><button data-day="1" aria-label="Next day" ${isToday?'disabled':''}>›</button></div>
+    ${balanceCard(k,true)}
+    <div class="card form" id="aForm">
+      <h3>${ed?'Edit activity':'Log an activity'}</h3>
+      <div class="chips">${ACTS.map(([n])=>`<button type="button" class="chip" data-act="${esc(n)}">${n}</button>`).join('')}${pastActivities().map(a=>`<button type="button" class="chip" data-pastact="${a.id}">${esc(a.name)}</button>`).join('')}</div>
+      <div class="fld"><label for="aName">Activity</label><input id="aName" class="inp" value="${esc(ed?.name||'')}" placeholder="e.g. Running, badminton, swim" autocomplete="off"></div>
+      <div class="row2">
+        <div class="fld"><label for="aMin">Duration</label><div class="unitwrap"><input id="aMin" inputmode="numeric" value="${esc(ed?.mins||'')}" placeholder="optional"><span>min</span></div></div>
+        <div class="fld"><label for="aKcal">Calories burnt</label><div class="unitwrap"><input id="aKcal" inputmode="numeric" value="${esc(ed?.kcal||'')}" placeholder="0"><span>kcal</span></div></div>
+      </div>
+      <p class="fine">Pick an activity and enter the minutes to estimate calories from your weight${w?` (${fmt(w)} kg)`:''}, or type the number from your watch or the machine.${w?'':' <button class="link" style="padding:0" type="button" data-go="targets">Add your weight in Targets</button> for estimates.'}</p>
+      <div class="btnrow">${ed?'<button type="button" class="btn danger" data-adel>Delete</button>':'<span></span>'}<button type="button" class="btn primary" data-asave>${ed?'Update':'Add activity'}</button></div>
+      ${ed?'<button type="button" class="link" data-acancel>Cancel editing</button>':''}
+    </div>
+    <section class="meal"><div class="meal-h"><h3>${isToday?"Today's activity":'Activity'}</h3>${list.length?`<span class="tot num">${fmt(total)} kcal burnt</span>`:''}</div>
+      ${list.length?list.map(a=>`<button class="entry" data-aedit="${a.id}"><div class="main"><div class="nm">${esc(a.name)}</div><div class="sub">${a.mins?`${fmt(a.mins)} min`:'Tap to edit'}</div></div><div class="vals num"><div class="burn">−${fmt(a.kcal)} kcal</div></div></button>`).join('')
+        :'<div class="empty-meal">Nothing logged yet</div>'}</section>
+    <div class="card"><h3>Count burnt calories</h3>
+      <div class="chips" style="margin-top:8px">${[100,75,50].map(p=>`<button type="button" class="chip ${burnPct()===p?'on':''}" data-burn="${p}">${p}%</button>`).join('')}</div>
+      <p class="fine" style="margin-top:8px">How much of what you burn is added back to what you can eat. Your activity level in Targets already allows for your usual training, and watches often overestimate, so counting 50–75% keeps you from counting the same workout twice.</p></div>
+    <div class="caution"><b>You can't out-train a bad diet.</b> Exercise is great for your health, but it burns fewer calories than most people expect: a 30-minute run burns about half a plate of chicken rice. Eating in moderation is still what makes the difference. Use this to stay honest, not to earn extra food.</div>
+  </div>`;
+}
+function fillAct(name,mins,kcal){$('#aName').value=name;$('#aMin').value=mins||'';$('#aKcal').value=kcal||'';A.touched=!!kcal;autoKcal()}
+// work out calories from minutes for a known activity, unless you typed the calories yourself
+function autoKcal(){
+  const met=metFor($('#aName').value),mins=+$('#aMin').value,w=bodyWeight()||70;
+  if(!A.touched&&met&&mins>0)$('#aKcal').value=Math.round(met*w*mins/60);
+}
+function saveActivity(){
+  const name=$('#aName').value.trim().slice(0,60),kcal=Math.round(+$('#aKcal').value||0),mins=Math.round(+$('#aMin').value||0);
+  if(!name){toast('Name the activity first');$('#aName').focus();return}
+  if(!(kcal>0)){toast('Enter the calories burnt, or the minutes for a listed activity');$('#aKcal').focus();return}
+  const k=S.date,day=S.days[k]||{kind:'day',date:k,entries:[]},old=day.activities||[];
+  const a={id:A.edit||uid(),name,kcal,...(mins?{mins}:{}),ts:A.edit?(old.find(x=>x.id===A.edit)?.ts||Date.now()):Date.now()};
+  const activities=A.edit?old.map(x=>x.id===A.edit?a:x):[...old,a];
+  S.days={...S.days,[k]:{...day,activities}};store.save();
+  const was=!!A.edit;A={edit:null,touched:false};render();toast(was?'Activity updated':`${name} added · ${fmt(kcal)} kcal`);
+}
+function deleteActivity(btn){
+  if(!btn.dataset.arm){btn.dataset.arm='1';btn.textContent='Tap again to delete';return}
+  const k=S.date,day={...S.days[k]},days={...S.days};day.activities=(day.activities||[]).filter(x=>x.id!==A.edit);
+  if((day.entries||[]).length||day.activities.length)days[k]=day;else delete days[k];
+  S.days=days;store.save();A={edit:null,touched:false};render();toast('Activity deleted');
+}
+const ACT_SEEN='fuel-log-seen-activity';
+function markActivitySeen(){try{localStorage.setItem(ACT_SEEN,'1')}catch(e){}$('#actNew').hidden=true}
+try{$('#actNew').hidden=!!localStorage.getItem(ACT_SEEN)}catch(e){$('#actNew').hidden=false}
 function macroRow(t,T){
   const cell=(cls,label,val,tg)=>`<div class="macro ${cls}"><div class="l">${label}</div><div class="v">${fmt(val)} g${tg?` <small>/ ${fmt(tg)} g</small>`:''}</div><div class="bar"><i style="width:${tg?Math.min(100,val/tg*100).toFixed(1):0}%"></i></div></div>`;
   return `<div class="macros">${cell('c','Carbs',t.carbs,T?.carbs)}${cell('f','Fat',t.fat,T?.fat)}${t.unknown?`<p class="macro-note">${t.unknown} ${t.unknown>1?'meals have':'meal has'} no carbs/fat yet and ${t.unknown>1?'are':'is'} not counted. Open ${t.unknown>1?'them':'it'} to add.</p>`:''}</div>`;
@@ -589,9 +693,17 @@ $('#importIn').onchange=async e=>{
 /* ---------------- interactions ---------------- */
 document.addEventListener('click',e=>{
   const t=e.target.closest('button');if(!t)return;
+  if((t.dataset.tab||t.dataset.go)==='activity')markActivitySeen();
   if(t.dataset.tab){S.tab=t.dataset.tab;$('#view').innerHTML='';render();if(S.tab==='targets')updateTargetsResult();$('#view').scrollTop=0;return}
   if(t.dataset.go){if(t.closest('#sheet'))closeSheet();S.tab=t.dataset.go;$('#view').innerHTML='';render();updateTargetsResult();if(t.dataset.scroll)$('#'+t.dataset.scroll)?.scrollIntoView({behavior:'smooth'});return}
-  if(t.dataset.day){const nk=addDays(S.date,+t.dataset.day);if(nk<=todayKey()){S.date=nk;render()}return}
+  if(t.dataset.day){const nk=addDays(S.date,+t.dataset.day);if(nk<=todayKey()){S.date=nk;A={edit:null,touched:false};render()}return}
+  if(t.dataset.act){fillAct(t.dataset.act,$('#aMin').value,'');$('#aMin').focus();return}
+  if(t.dataset.pastact){let a=null;for(const d of Object.values(S.days)){a=(d.activities||[]).find(x=>x.id===t.dataset.pastact);if(a)break}if(a)fillAct(a.name,a.mins,a.kcal);return}
+  if(t.hasAttribute('data-asave')){saveActivity();return}
+  if(t.hasAttribute('data-adel')){deleteActivity(t);return}
+  if(t.hasAttribute('data-acancel')){A={edit:null,touched:false};render();return}
+  if(t.dataset.aedit){A={edit:t.dataset.aedit,touched:true};render();$('#aForm').scrollIntoView({behavior:'smooth',block:'start'});return}
+  if(t.dataset.burn){S.settings={...S.settings,burnPct:+t.dataset.burn};store.save();render();return}
   if(t.dataset.range){S.range=+t.dataset.range;render();return}
   if(t.hasAttribute('data-aisave')){saveKey();return}
   if(t.hasAttribute('data-theme-toggle')){toggleTheme();return}
@@ -605,7 +717,9 @@ document.addEventListener('click',e=>{
   const grp=t.closest('[data-group]');
   if(grp&&t.classList.contains('chip')){grp.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',c===t));updateTargetsResult();return}
 });
-document.addEventListener('input',e=>{if(e.target.closest('#tForm'))updateTargetsResult()});
+document.addEventListener('input',e=>{if(e.target.closest('#tForm'))updateTargetsResult();
+  if(e.target.id==='aKcal')A.touched=!!e.target.value;
+  if(e.target.id==='aMin'||e.target.id==='aName')autoKcal()});
 document.addEventListener('change',e=>{
   if(e.target.id!=='macrosIn')return;
   S.settings={...S.settings,macros:e.target.checked};store.save();
@@ -782,13 +896,13 @@ $('#saveBtn').onclick=()=>{
   const e={id:D.edit||uid(),meal:D.meal,...m,note:D.note.trim().slice(0,300),ts:D.edit?(old.find(x=>x.id===D.edit)?.ts||Date.now()):Date.now()};
   const f=!D.edit&&favByName(m.name);if(f){f.uses=(f.uses||0)+1;f.lastUsed=Date.now()}
   const entries=D.edit?old.map(x=>x.id===D.edit?e:x):[...old,e];
-  S.days={...S.days,[D.date]:{kind:'day',date:D.date,entries}};saveDay();
+  S.days={...S.days,[D.date]:{...S.days[D.date],kind:'day',date:D.date,entries}};saveDay();
   const label=MEALS.find(m=>m.id===e.meal).label,wasEdit=!!D.edit;closeSheet();render();toast(wasEdit?'Updated':`Added to ${label}`);
 };
 $('#deleteBtn').onclick=()=>{
   const b=$('#deleteBtn');if(!b.dataset.arm){b.dataset.arm='1';b.textContent='Tap again to delete';return}
   const key=D.date;const entries=(S.days[key]?.entries||[]).filter(x=>x.id!==D.edit);
-  const days={...S.days};if(entries.length)days[key]={kind:'day',date:key,entries};else delete days[key];S.days=days;
+  const days={...S.days};if(entries.length||(days[key]?.activities||[]).length)days[key]={...days[key],entries};else delete days[key];S.days=days;
   saveDay();closeSheet();render();toast('Deleted');
 };
 

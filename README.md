@@ -79,6 +79,36 @@ For meals you eat often, like your morning kopi or your usual chicken rice, save
 - **To change a favourite:** fill the form from it and change the numbers. The button changes to **★ Update favourite with these numbers**; tap it to save the new numbers. If you only change the numbers for today and don't tap it, the favourite stays as it was.
 - **To remove one:** tap **★ In favourites** while it's filled in, or go to **Targets → Favourite meals → Remove**.
 
+### Energy balance: calories in vs calories burnt
+
+The **Energy balance** card on Today compares what you ate with what you burnt:
+
+**intake − burnt = net.** A positive net is a calorie **surplus**, a negative net is a **deficit**. It's coloured by the goal in Targets: green when you're on track (a deficit when losing fat, a surplus when building muscle, within 10% when maintaining), red when you're not. Your calorie target ring is separate and doesn't change.
+
+"Burnt" is your **total** for the day: resting + active energy from Apple Health (or your watch). Because this is your whole day's burn, it already includes your body's resting burn. Don't also add it on top of your target.
+
+You can enter it three ways:
+
+- **Type it** into the box on Today.
+- **Paste** it: run your Shortcut (it copies the number), open Fuel Log, and tap **Paste**.
+- **Send it with a link** (one tap): the Shortcut opens Fuel Log with the number in the link, and it's filled in automatically.
+
+Running the Shortcut again later in the day replaces the number, since Health gives a running total.
+
+#### Setting up the Apple Shortcut
+
+In the **Shortcuts** app, create a shortcut with these actions:
+
+1. **Find Health Samples** where *Type* is **Active Calories** and *Start Date* is **today**. Then **Calculate Statistics → Sum** of the samples.
+2. **Find Health Samples** where *Type* is **Resting Calories** and *Start Date* is **today**. Then **Calculate Statistics → Sum**.
+3. **Calculate**: first sum **+** second sum. Then **Round Number**.
+4. **Copy to Clipboard**: the rounded number. This is the fallback for **Paste**.
+5. **Open URLs**: `https://pokealimit.github.io/Fuel-Log/?burnt=` followed by the **Rounded Number** variable.
+
+To fill in an earlier day, add `&date=2026-11-20` (any date in `YYYY-MM-DD` format) to the link.
+
+If the link opens Safari instead of your home-screen app, the number is saved in Safari's copy of Fuel Log. In that case use the **Paste** button in your home-screen app instead. (Some iOS versions can open home-screen apps directly with a `webapp://pokealimit.github.io/Fuel-Log/?burnt=…` link; if yours does, use that in step 5.)
+
 ### Editing and past days
 
 - Tap any logged meal to edit or delete it.
@@ -101,7 +131,7 @@ Your log only lives on your phone, in the browser's storage. It can be lost if y
 - **Targets → Your data → Export backup** saves a `.json` file. Keep it in Files, iCloud Drive or Google Drive.
 - **Import backup** restores a backup file. It replaces the log on the phone with the backup.
 
-Backups include your meals, targets, favourites and settings. They don't include your Gemini key. Backups made by older versions of Fuel Log still import fine. Fuel Log reminds you on the Today screen if you haven't backed up in a while.
+Backups include your meals, calories burnt, targets, favourites and settings. They don't include your Gemini key. Backups made by older versions of Fuel Log still import fine. Fuel Log reminds you on the Today screen if you haven't backed up in a while.
 
 ---
 

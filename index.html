@@ -532,9 +532,9 @@ function viewTrends(){
       <div class="stat"><div class="v">${hit==null?`${lt.length}/${n}`:`${hit}/${lt.length}`}</div><div class="l">${hit==null?'days logged':'days hit protein'}</div></div>
     </div>
     ${macrosOn()?macroStats(logged):''}
-    ${energyTrends(keys,labels,sub)}
     <div class="card"><h3>Calories</h3><p class="cap">${sub}${T?.kcal?` · dashed line is your ${fmt(T.kcal)} kcal target`:''}</p>${bars(tot.map(x=>x.kcal),labels,T?.kcal,'bk',true)}</div>
     <div class="card"><h3>Protein</h3><p class="cap">${sub}${T?.protein?` · dashed line is your ${fmt(T.protein)} g target`:''}</p>${bars(tot.map(x=>x.protein),labels,T?.protein,'bp',false)}</div>
+    ${energyTrends(keys,labels,sub)}
     ${!logged.length?'<div class="banner">Log a few meals and your daily totals will chart here.</div>':''}
   </div>`;
 }

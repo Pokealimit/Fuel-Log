@@ -109,6 +109,19 @@ To fill in an earlier day, add `&date=2026-11-20` (any date in `YYYY-MM-DD` form
 
 If the link opens Safari instead of your home-screen app, the number is saved in Safari's copy of Fuel Log. In that case use the **Paste** button in your home-screen app instead. (Some iOS versions can open home-screen apps directly with a `webapp://pokealimit.github.io/Fuel-Log/?burnt=…` link; if yours does, use that in step 5.)
 
+#### Energy balance trends
+
+In **Trends**, once you've entered calories burnt:
+
+- **Surplus & deficit** charts your net calories for each day: above the line is a surplus, below is a deficit, coloured by your goal. Under it you'll see:
+  - your average per day
+  - the total for the period in kg
+  - a projection, e.g. "If you keep this up: about −0.4 kg a week, −1.75 kg a month"
+  It uses the rough estimate that 7,700 kcal ≈ 1 kg of body fat. Day-to-day weight also moves with water and food, so judge it over a few weeks.
+- **Energy burnt** charts your calories burnt each day against your average. It also compares that average with the previous week (or 30 days), so you can see whether you're getting more or less active.
+
+Today is shown faded and isn't counted in averages until it's over, because a mid-day number is only a running total.
+
 ### Editing and past days
 
 - Tap any logged meal to edit or delete it.

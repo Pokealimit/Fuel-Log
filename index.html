@@ -147,6 +147,12 @@ h2.h{margin:0;font:700 24px/1.1 var(--display);letter-spacing:-.3px}
 .chart .bk{fill:var(--kcal)} .chart .bp{fill:var(--protein)} .chart .bo{fill:var(--over)}
 .chart .ghost{fill:var(--line)}
 .chart .today{font-weight:700;fill:var(--ink)}
+.chart .good{fill:var(--good)} .chart .bad{fill:var(--over)} .chart .bb{fill:var(--carbs)}
+.chart .partial{opacity:.4}
+.chart .zero{stroke:var(--ink);stroke-width:1.2;opacity:.6}
+.insight{display:flex;flex-direction:column;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line);font-size:13.5px}
+.insight .big{font:700 18px/1.2 var(--display);font-variant-numeric:tabular-nums}
+.insight b.good{color:var(--good)} .insight b.bad{color:var(--over)}
 
 .form{display:flex;flex-direction:column;gap:14px}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -526,10 +532,54 @@ function viewTrends(){
       <div class="stat"><div class="v">${hit==null?`${lt.length}/${n}`:`${hit}/${lt.length}`}</div><div class="l">${hit==null?'days logged':'days hit protein'}</div></div>
     </div>
     ${macrosOn()?macroStats(logged):''}
+    ${energyTrends(keys,labels,sub)}
     <div class="card"><h3>Calories</h3><p class="cap">${sub}${T?.kcal?` · dashed line is your ${fmt(T.kcal)} kcal target`:''}</p>${bars(tot.map(x=>x.kcal),labels,T?.kcal,'bk',true)}</div>
     <div class="card"><h3>Protein</h3><p class="cap">${sub}${T?.protein?` · dashed line is your ${fmt(T.protein)} g target`:''}</p>${bars(tot.map(x=>x.protein),labels,T?.protein,'bp',false)}</div>
     ${!logged.length?'<div class="banner">Log a few meals and your daily totals will chart here.</div>':''}
   </div>`;
+}
+/* energy balance trends: net per day, weight insight, calories burnt */
+const KCAL_PER_KG=7700; // rough energy in 1 kg of body fat
+const sgn=v=>`${v>0?'+':v<0?'−':''}${fmt(Math.abs(v))}`;
+const kg=v=>`${v>0?'+':v<0?'−':''}${Math.abs(v).toFixed(Math.abs(v)<10?2:1)} kg`;
+function energyTrends(keys,labels,sub){
+  const today=todayKey(),n=keys.length,es=keys.map(energy);
+  // a day counts once it's over and has both meals and calories burnt
+  const full=keys.map((k,i)=>k<today&&es[i].burnt!=null&&es[i].eaten>0);
+  const burntDays=keys.filter((k,i)=>k<today&&es[i].burnt!=null);
+  if(!es.some(e=>e.burnt!=null))return `<div class="card"><h3>Energy balance</h3><p class="cap" style="margin:4px 0 0">Enter your calories burnt on Today (or send them with your Shortcut) and your surplus, deficit and activity trends will show here.</p></div>`;
+  const nets=keys.map((k,i)=>es[i].burnt!=null&&es[i].eaten>0?es[i].net:null);
+  const tones=nets.map((v,i)=>v==null?'':energyTone(v,es[i].burnt));
+  const fn=nets.filter((v,i)=>full[i]),days=fn.length,total=fn.reduce((a,v)=>a+v,0),avg=days?total/days:0;
+  const word=v=>v>0?'surplus':'deficit';
+  const insight=days?`<div class="insight">
+      <div><span class="big">${sgn(avg)} kcal</span> a day on average · <b class="${energyTone(avg,burntAvg(keys,es,full))}">${fmt(Math.abs(avg))} kcal ${word(avg)}</b></div>
+      <div>Over these ${days} day${days>1?'s':''}: ${sgn(total)} kcal ≈ <b>${kg(total/KCAL_PER_KG)}</b></div>
+      <div>If you keep this up: about <b>${kg(avg*7/KCAL_PER_KG)}</b> a week, <b>${kg(avg*30/KCAL_PER_KG)}</b> a month</div>
+      <p class="fine">A rough estimate: about 7,700 kcal ≈ 1 kg of body fat. Day-to-day weight also moves with water and food, so judge it over a few weeks.${keys.includes(today)&&es[n-1].burnt!=null?' Today counts once it\'s over.':''}</p>
+    </div>`:'<p class="fine" style="margin-top:8px">Once a full day has both meals and calories burnt, your average and weight estimate show here.</p>';
+  // activity: average burnt this period vs the period before it
+  const bVals=keys.map((k,i)=>es[i].burnt??0),bAvg=burntDays.length?burntDays.reduce((a,k)=>a+energy(k).burnt,0)/burntDays.length:0;
+  const prev=[];for(let i=1;i<=n;i++){const k=addDays(keys[0],-i);const e=energy(k);if(e.burnt!=null)prev.push(e.burnt)}
+  const pAvg=prev.length?prev.reduce((a,v)=>a+v,0)/prev.length:0,diff=bAvg-pAvg,pct=pAvg?diff/pAvg*100:0,span=n<=7?'week':'30 days';
+  const trend=!burntDays.length?'':!prev.length?`<div>Keep logging to compare with the previous ${span}.</div>`
+    :Math.abs(pct)<3?`<div>About the same as the previous ${span} (${fmt(pAvg)} kcal a day).</div>`
+    :`<div><b class="${diff>0?'good':'bad'}">${diff>0?'Up':'Down'} ${fmt(Math.abs(diff))} kcal a day (${diff>0?'+':'−'}${Math.abs(pct).toFixed(0)}%)</b> vs the previous ${span}: ${diff>0?'more':'less'} active.</div>`;
+  return `<div class="card"><h3>Surplus &amp; deficit</h3><p class="cap">${sub} · above the line is a surplus, below is a deficit</p>${netBars(nets,labels,tones,keys.indexOf(today))}${insight}</div>
+    <div class="card"><h3>Energy burnt</h3><p class="cap">${sub}${burntDays.length?` · dashed line is your ${fmt(bAvg)} kcal average`:''}</p>${bars(bVals,labels,burntDays.length?bAvg:0,'bb',false,keys.indexOf(today))}
+      ${burntDays.length?`<div class="insight"><div><span class="big">${fmt(bAvg)} kcal</span> burnt a day on average${burntDays.length<keys.filter(k=>k<today).length?` (${burntDays.length} days logged)`:''}</div>${trend}</div>`:''}</div>`;
+}
+function burntAvg(keys,es,full){const b=es.filter((e,i)=>full[i]).map(e=>e.burnt);return b.length?b.reduce((a,v)=>a+v,0)/b.length:0}
+// bars above and below a zero line; null = no data that day; the current day is drawn faded
+function netBars(vals,labels,tones,partialAt){
+  const W=340,H=170,pl=40,pr=6,pt=10,pb=22,n=vals.length,iw=W-pl-pr,ih=H-pt-pb;
+  const mx=Math.max(100,...vals.map(v=>Math.abs(v||0)));const step=niceStep(mx/2);const top=Math.ceil(mx*1.05/step)*step;
+  const y=v=>pt+ih/2-(v/top)*(ih/2);const bw=iw/n;let s=`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Daily surplus and deficit chart">`;
+  for(let v=-top;v<=top+1e-9;v+=step){s+=`<line class="grid" x1="${pl}" x2="${W-pr}" y1="${y(v)}" y2="${y(v)}"/><text x="${pl-5}" y="${y(v)+3}" text-anchor="end">${v>0?'+':v<0?'−':''}${Math.abs(v)>=1000?(Math.abs(v)/1000)+'k':Math.abs(v)}</text>`}
+  vals.forEach((v,i)=>{const x=pl+i*bw+bw*.16,w=bw*.68;
+    if(v!=null&&v!==0){const h=Math.max(1.5,Math.abs(v)/top*(ih/2));s+=`<rect class="${tones[i]||'bk'}${i===partialAt?' partial':''}" x="${x.toFixed(1)}" y="${(v>0?y(0)-h:y(0)).toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" rx="${Math.min(3,w/3).toFixed(1)}"/>`}
+    if(labels[i])s+=`<text x="${(pl+i*bw+bw/2).toFixed(1)}" y="${H-6}" text-anchor="middle" class="${i===n-1?'today':''}">${labels[i]}</text>`});
+  return s+`<line class="zero" x1="${pl}" x2="${W-pr}" y1="${y(0)}" y2="${y(0)}"/></svg>`;
 }
 function macroStats(logged){
   // average only over days where every meal has carbs/fat, so older logs don't drag it down
@@ -538,13 +588,13 @@ function macroStats(logged){
   return `<div class="stats" style="grid-template-columns:1fr 1fr"><div class="stat"><div class="v">${avg('carbs')}</div><div class="l">avg carbs / day</div></div><div class="stat"><div class="v">${avg('fat')}</div><div class="l">avg fat / day${n<logged.length?` (${n} full days)`:''}</div></div></div>`;
 }
 function niceStep(x){const e=Math.pow(10,Math.floor(Math.log10(x))),f=x/e;return (f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*e}
-function bars(vals,labels,target,cls,overRed){
+function bars(vals,labels,target,cls,overRed,partialAt=-1){
   const W=340,H=160,pl=34,pr=6,pt=10,pb=22,n=vals.length,iw=W-pl-pr,ih=H-pt-pb;
   const mx=Math.max(target||0,...vals,1);const step=niceStep(mx/3);const top=Math.ceil(mx*1.05/step)*step;
   const y=v=>pt+ih-(v/top)*ih;const bw=iw/n;let s=`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Daily totals chart">`;
   for(let v=0;v<=top+1e-9;v+=step){s+=`<line class="grid" x1="${pl}" x2="${W-pr}" y1="${y(v)}" y2="${y(v)}"/><text x="${pl-5}" y="${y(v)+3}" text-anchor="end">${v>=1000?(v/1000)+'k':v}</text>`}
   vals.forEach((v,i)=>{const x=pl+i*bw+bw*.16,w=bw*.68;
-    if(v>0){const h=Math.max(1.5,(v/top)*ih);const c=overRed&&target&&v>target*1.1?'bo':cls;s+=`<rect class="${c}" x="${x.toFixed(1)}" y="${(pt+ih-h).toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" rx="${Math.min(3,w/3).toFixed(1)}"/>`}
+    if(v>0){const h=Math.max(1.5,(v/top)*ih);const c=(overRed&&target&&v>target*1.1?'bo':cls)+(i===partialAt?' partial':'');s+=`<rect class="${c}" x="${x.toFixed(1)}" y="${(pt+ih-h).toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" rx="${Math.min(3,w/3).toFixed(1)}"/>`}
     else s+=`<rect class="ghost" x="${x.toFixed(1)}" y="${pt+ih-2}" width="${w.toFixed(1)}" height="2"/>`;
     if(labels[i])s+=`<text x="${(pl+i*bw+bw/2).toFixed(1)}" y="${H-6}" text-anchor="middle" class="${i===n-1?'today':''}">${labels[i]}</text>`});
   if(target)s+=`<line class="tgt" x1="${pl}" x2="${W-pr}" y1="${y(target)}" y2="${y(target)}"/>`;
